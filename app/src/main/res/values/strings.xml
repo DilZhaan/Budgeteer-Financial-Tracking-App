@@ -1,0 +1,128 @@
+<resources>
+    <string name="app_name">Budgeteer</string>
+    <string name="copyrights">© 2025 D Codz</string>
+    <string name="Sign_In">Sign In</string>
+    <string name="UName">Username</string>
+    <string name="Pwd">Password</string>
+    <string name="Sign_Up">Sign Up</string>
+    <string name="FogetPwd">Fogot Password?</string>
+    <string name="FullNameSignUp">Full Name</string>
+    <string name="EmailSignUp">Email</string>
+    <string name="ConfirmPwd">Confirm Password</string>
+    <string name="todo">TODO</string>
+    <string name="name">Name</string>
+    <string name="description">Description</string>
+    <string name="quote">Budget</string>
+    <string name="color">Color</string>
+    <string name="revenue_expense">Revenue/Expense</string>
+    <string name="value">Value</string>
+    <string name="alert">Ask yourself: Do I really need this?</string>
+    <string name="residence">Housing</string>
+    <string name="transport">Transportation</string>
+    <string name="leisure">Leisure</string>
+    <string name="balance">Balance</string>
+    <string name="zero_number">$0.00</string>
+    <string name="logo_descripton">Budgeteer App</string>
+    <string name="desc_register">Register button</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="amount_of_expense">$1,200.00</string>
+    <string name="desc_img_revenue">Revenue</string>
+    <string name="desc_img_expense">Expense</string>
+    <string name="category">Category</string>
+    <string name="food">Food</string>
+    <string name="desc_leisure_chart">Description for leisure chart</string>
+    <string name="desc_color_food">Color description for food</string>
+    <string name="desc_color_transport">Color description for transport</string>
+    <string name="desc_color_residence">Color description for residence</string>
+    <string name="desc_color_leisure">Color description for leisure</string>
+    <string name="expense_food">Food expenses</string>
+    <string name="expense_transport">Transport expenses</string>
+    <string name="expense_residence">Residence expenses</string>
+    <string name="expense_leisure">Leisure expenses</string>
+    <string name="desc_spotify">Spotify subscription</string>
+    <string name="desc_academia">Academia membership</string>
+    <string name="desc_cajuzada">Cajuzada description</string>
+    <string name="desc_salario">Salary description</string>
+    <string name="quote_v_expense">Revenue vs Expenses</string>
+    <string name="spend_comparison">Spending comparison</string>
+    <string name="bold_alert">Avoid impulse purchases!</string>
+    <string name="balance_amount">$3,500.00</string>
+    <string name="history">History</string>
+    <string name="desc_dashboard">Dashboard button</string>
+    <string name="expenditure_by_category">Expenses by category</string>
+    <string name="revenue">Revenue</string>
+    <string name="amount_of_revenue">$3,500.00</string>
+    <string name="expenditure">Expense</string>
+    <string name="desc_history">History button</string>
+    <string name="categories">Categories</string>
+    <string name="desc_categories">Category button</string>
+    <string name="register">Register</string>
+    <string name="new_category">Create new category</string>
+    <string name="current_balance">Current Balance</string>
+    <string name="current_balance_value">$3,500.00</string>
+    <string name="monthly_balance_sheet">Monthly Balance</string>
+    <string name="monthly_balance_sheet_value">$712.00</string>
+    <string name="tuesday">Tuesday, 30</string>
+    <string name="wednesday">Wednesday, 01</string>
+    <string name="thursday">Thursday, 02</string>
+    <string name="spotify">Spotify</string>
+    <string name="cajuzada">Cajuzada</string>
+    <string name="academia">Gym</string>
+    <string name="rogerinho">Rogerinho</string>
+    <string name="agiota">Loan Shark</string>
+    <string name="salario">Salary</string>
+    <string name="expense_spotify">- $11.90</string>
+    <string name="expense_academia">- $99.00</string>
+    <string name="expense_agiota">-$3,200.00</string>
+    <string name="expense_rogerinho">- $200.00</string>
+    <string name="entry_cajuzada">$616.00</string>
+    <string name="entry_salario">$320.00</string>
+    <string name="time_spotify">11:49</string>
+    <string name="time_academia">10:17</string>
+    <string name="time_agiota">23:43</string>
+    <string name="time_rogerinho">01:21</string>
+    <string name="time_cajuzada">06:59</string>
+    <string name="time_salario">08:59</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="lorem_ipsum">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
+        volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus
+        dui nec risus. Maecenas non sodales nisi, vel dictum dolor. Class aptent taciti sociosqu ad
+        litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse blandit eleifend
+        diam, vel rutrum tellus vulputate quis. Aliquam eget libero aliquet, imperdiet nisl a,
+        ornare ex. Sed rhoncus est ut libero porta lobortis. Fusce in dictum tellus.\n\n
+        Suspendisse interdum ornare ante. Aliquam nec cursus lorem. Morbi id magna felis. Vivamus
+        egestas, est a condimentum egestas, turpis nisl iaculis ipsum, in dictum tellus dolor sed
+        neque. Morbi tellus erat, dapibus ut sem a, iaculis tincidunt dui. Interdum et malesuada
+        fames ac ante ipsum primis in faucibus. Curabitur et eros porttitor, ultricies urna vitae,
+        molestie nibh. Phasellus at commodo eros, non aliquet metus. Sed maximus nisl nec dolor
+        bibendum, vel congue leo egestas.\n\n
+        Sed interdum tortor nibh, in sagittis risus mollis quis. Curabitur mi odio, condimentum sit
+        amet auctor at, mollis non turpis. Nullam pretium libero vestibulum, finibus orci vel,
+        molestie quam. Fusce blandit tincidunt nulla, quis sollicitudin libero facilisis et. Integer
+        interdum nunc ligula, et fermentum metus hendrerit id. Vestibulum lectus felis, dictum at
+        lacinia sit amet, tristique id quam. Cras eu consequat dui. Suspendisse sodales nunc ligula,
+        in lobortis sem porta sed. Integer id ultrices magna, in luctus elit. Sed a pellentesque
+        est.\n\n
+        Aenean nunc velit, lacinia sed dolor sed, ultrices viverra nulla. Etiam a venenatis nibh.
+        Morbi laoreet, tortor sed facilisis varius, nibh orci rhoncus nulla, id elementum leo dui
+        non lorem. Nam mollis ipsum quis auctor varius. Quisque elementum eu libero sed commodo. In
+        eros nisl, imperdiet vel imperdiet et, scelerisque a mauris. Pellentesque varius ex nunc,
+        quis imperdiet eros placerat ac. Duis finibus orci et est auctor tincidunt. Sed non viverra
+        ipsum. Nunc quis augue egestas, cursus lorem at, molestie sem. Morbi a consectetur ipsum, a
+        placerat diam. Etiam vulputate dignissim convallis. Integer faucibus mauris sit amet finibus
+        convallis.\n\n
+        Phasellus in aliquet mi. Pellentesque habitant morbi tristique senectus et netus et
+        malesuada fames ac turpis egestas. In volutpat arcu ut felis sagittis, in finibus massa
+        gravida. Pellentesque id tellus orci. Integer dictum, lorem sed efficitur ullamcorper,
+        libero justo consectetur ipsum, in mollis nisl ex sed nisl. Donec maximus ullamcorper
+        sodales. Praesent bibendum rhoncus tellus nec feugiat. In a ornare nulla. Donec rhoncus
+        libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
+        vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
+    </string>
+</resources>
