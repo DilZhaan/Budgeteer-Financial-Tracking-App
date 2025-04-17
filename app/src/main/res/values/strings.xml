@@ -89,6 +89,14 @@
     <string name="next">Next</string>
     <string name="previous">Previous</string>
 
+    <string name="expense">Despesa</string>
+    <string name="validation_error">Por favor, preencha todos os campos corretamente</string>
+    <string name="transaction_saved">Transação registrada com sucesso!</string>
+    <string name="sunday">Domingo</string>
+    <string name="monday">Segunda-feira</string>
+    <string name="friday">Sexta-feira</string>
+    <string name="saturday">Sábado</string>
+
     <string name="lorem_ipsum">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
         volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus
