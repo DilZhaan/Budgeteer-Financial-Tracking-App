@@ -5,11 +5,11 @@
     <string name="UName">Username</string>
     <string name="Pwd">Password</string>
     <string name="Sign_Up">Sign Up</string>
-    <string name="FogetPwd">Fogot Password?</string>
+    <string name="FogetPwd">Forgot Password?</string>
     <string name="FullNameSignUp">Full Name</string>
     <string name="EmailSignUp">Email</string>
     <string name="ConfirmPwd">Confirm Password</string>
-    <string name="todo">TODO</string>
+    <string name="todo">To-Do</string>
     <string name="name">Name</string>
     <string name="description">Description</string>
     <string name="quote">Budget</string>
@@ -33,14 +33,14 @@
     <string name="desc_leisure_chart">Description for leisure chart</string>
     <string name="desc_color_food">Color description for food</string>
     <string name="desc_color_transport">Color description for transport</string>
-    <string name="desc_color_residence">Color description for residence</string>
+    <string name="desc_color_residence">Color description for housing</string>
     <string name="desc_color_leisure">Color description for leisure</string>
     <string name="expense_food">Food expenses</string>
-    <string name="expense_transport">Transport expenses</string>
-    <string name="expense_residence">Residence expenses</string>
+    <string name="expense_transport">Transportation expenses</string>
+    <string name="expense_residence">Housing expenses</string>
     <string name="expense_leisure">Leisure expenses</string>
     <string name="desc_spotify">Spotify subscription</string>
-    <string name="desc_academia">Academia membership</string>
+    <string name="desc_academia">Gym membership</string>
     <string name="desc_cajuzada">Cajuzada description</string>
     <string name="desc_salario">Salary description</string>
     <string name="quote_v_expense">Revenue vs Expenses</string>
@@ -49,7 +49,7 @@
     <string name="balance_amount">$3,500.00</string>
     <string name="history">History</string>
     <string name="desc_dashboard">Dashboard button</string>
-    <string name="expenditure_by_category">Expenses by category</string>
+    <string name="expenditure_by_category">Expenses by Category</string>
     <string name="revenue">Revenue</string>
     <string name="amount_of_revenue">$3,500.00</string>
     <string name="expenditure">Expense</string>
@@ -57,14 +57,14 @@
     <string name="categories">Categories</string>
     <string name="desc_categories">Category button</string>
     <string name="register">Register</string>
-    <string name="new_category">Create new category</string>
+    <string name="new_category">Create New Category</string>
     <string name="current_balance">Current Balance</string>
     <string name="current_balance_value">$3,500.00</string>
     <string name="monthly_balance_sheet">Monthly Balance</string>
     <string name="monthly_balance_sheet_value">$712.00</string>
-    <string name="tuesday">Tuesday, 30</string>
-    <string name="wednesday">Wednesday, 01</string>
-    <string name="thursday">Thursday, 02</string>
+    <string name="tuesday">Tuesday</string>
+    <string name="wednesday">Wednesday</string>
+    <string name="thursday">Thursday</string>
     <string name="spotify">Spotify</string>
     <string name="cajuzada">Cajuzada</string>
     <string name="academia">Gym</string>
@@ -73,7 +73,7 @@
     <string name="salario">Salary</string>
     <string name="expense_spotify">- $11.90</string>
     <string name="expense_academia">- $99.00</string>
-    <string name="expense_agiota">-$3,200.00</string>
+    <string name="expense_agiota">- $3,200.00</string>
     <string name="expense_rogerinho">- $200.00</string>
     <string name="entry_cajuzada">$616.00</string>
     <string name="entry_salario">$320.00</string>
@@ -83,20 +83,20 @@
     <string name="time_rogerinho">01:21</string>
     <string name="time_cajuzada">06:59</string>
     <string name="time_salario">08:59</string>
+
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
-
-    <string name="expense">Despesa</string>
-    <string name="validation_error">Por favor, preencha todos os campos corretamente</string>
-    <string name="transaction_saved">Transação registrada com sucesso!</string>
-    <string name="sunday">Domingo</string>
-    <string name="monday">Segunda-feira</string>
-    <string name="friday">Sexta-feira</string>
-    <string name="saturday">Sábado</string>
-
+    <string name="expense">Expense</string>
+    <string name="validation_error">Please fill in all fields correctly</string>
+    <string name="transaction_saved">Transaction successfully recorded!</string>
+    <string name="sunday">Sunday</string>
+    <string name="monday">Monday</string>
+    <string name="friday">Friday</string>
+    <string name="saturday">Saturday</string>
+    <string name="desc_transaction_indicator">Transaction type indicator</string>
     <string name="lorem_ipsum">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
         volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus

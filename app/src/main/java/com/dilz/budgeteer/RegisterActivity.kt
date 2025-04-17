@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
@@ -19,14 +20,10 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var nameInput: EditText
     private lateinit var descriptionInput: EditText
-    private lateinit var categoryInput: EditText
     private lateinit var typeInput: EditText
     private lateinit var valueInput: EditText
-    private lateinit var addButton: ImageButton
-    private lateinit var returnButton: ImageButton
-
     private var isExpense = true // Default is expense
-    private val textWatchers = ArrayList<TextWatcher>()
+    private val TAG = "RegisterActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,11 +35,18 @@ class RegisterActivity : AppCompatActivity() {
         // Link UI elements
         nameInput = findViewById(R.id.input_name)
         descriptionInput = findViewById(R.id.input_description)
-        categoryInput = findViewById(R.id.input_categoria)
-        typeInput = findViewById(R.id.input_value) // This is for revenue/expense selection
-        valueInput = findViewById(R.id.spinner_income_outcome) // This is for the amount
-        addButton = findViewById(R.id.imageButton)
-        returnButton = findViewById(R.id.return_button)
+        typeInput = findViewById(R.id.input_value) // Revenue/expense selection
+        valueInput = findViewById(R.id.spinner_income_outcome) // Amount input
+
+        // Set up return button
+        findViewById<ImageButton>(R.id.return_button).setOnClickListener {
+            finish()
+        }
+
+        // Set up add button
+        findViewById<ImageButton>(R.id.imageButton).setOnClickListener {
+            saveTransaction()
+        }
 
         // Set default transaction type
         typeInput.setText(getString(R.string.expense))
@@ -50,38 +54,48 @@ class RegisterActivity : AppCompatActivity() {
         // Clear default text when fields are focused
         setupInputClearOnFocus(nameInput, getString(R.string.name))
         setupInputClearOnFocus(descriptionInput, getString(R.string.description))
-        setupInputClearOnFocus(categoryInput, getString(R.string.category))
+        setupInputClearOnFocus(valueInput, "0")
 
         // Handle toggle between revenue and expense
         typeInput.setOnClickListener {
             toggleTransactionType()
         }
 
-        // Format value input as currency
-        val valueWatcher = object : TextWatcher {
+        // Add value formatter
+        valueInput.addTextChangedListener(object : TextWatcher {
+            private var isFormatting = false
+
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
             override fun afterTextChanged(s: Editable?) {
-                if (s.toString() != "0" && valueInput.hasFocus()) {
-                    formatAsCurrency(s)
+                if (isFormatting) return
+
+                isFormatting = true
+
+                if (s != null && s.isNotEmpty() && !s.toString().equals("0")) {
+                    // Only format if it's not "0" or empty
+                    try {
+                        // Remove non-digit characters
+                        val digitsOnly = s.toString().replace(Regex("[^\\d]"), "")
+
+                        // Convert to decimal
+                        val amount = if (digitsOnly.isEmpty()) 0.0 else digitsOnly.toDouble() / 100
+
+                        // Format as currency
+                        valueInput.setText(String.format("%.2f", amount))
+                        valueInput.setSelection(valueInput.text.length)
+                    } catch (e: Exception) {
+                        // Reset to 0 if there's an error
+                        valueInput.setText("0.00")
+                        valueInput.setSelection(valueInput.text.length)
+                    }
                 }
+
+                isFormatting = false
             }
-        }
-
-        valueInput.addTextChangedListener(valueWatcher)
-        textWatchers.add(valueWatcher)
-
-        // Handle return button click
-        returnButton.setOnClickListener {
-            finish()
-        }
-
-        // Handle add button click
-        addButton.setOnClickListener {
-            saveTransaction()
-        }
+        })
     }
 
     private fun setupInputClearOnFocus(editText: EditText, defaultText: String) {
@@ -99,101 +113,99 @@ class RegisterActivity : AppCompatActivity() {
         typeInput.setText(if (isExpense) R.string.expense else R.string.revenue)
     }
 
-    private fun formatAsCurrency(s: Editable?) {
-        if (s == null) return
-
-        // Remove non-numeric characters
-        val cleanString = s.toString().replace(Regex("[^\\d]"), "")
-
-        if (cleanString.isEmpty()) {
-            valueInput.setText("0")
-            valueInput.setSelection(1)
-            return
-        }
-
-        try {
-            // Handle TextWatchers to prevent infinite loops
-            for (watcher in textWatchers) {
-                valueInput.removeTextChangedListener(watcher)
-            }
-
-            // Convert to decimal value
-            val parsed = cleanString.toDouble() / 100
-
-            // Format as currency
-            val formatted = String.format(Locale.getDefault(), "%.2f", parsed)
-
-            // Update text
-            valueInput.setText(formatted)
-            valueInput.setSelection(formatted.length)
-
-            // Add TextWatchers back
-            for (watcher in textWatchers) {
-                valueInput.addTextChangedListener(watcher)
-            }
-        } catch (e: Exception) {
-            // Handle formatting errors
-            valueInput.setText("0.00")
-            valueInput.setSelection(4)
-        }
-    }
-
     private fun saveTransaction() {
         // Get input values
         val name = nameInput.text.toString()
         val description = descriptionInput.text.toString()
-        val category = categoryInput.text.toString()
-        val valueText = valueInput.text.toString()
 
-        // Validate inputs
-        if (name == getString(R.string.name) ||
-            category == getString(R.string.category) ||
-            valueText == "0" || valueText == "0.00") {
-
-            Toast.makeText(this, getString(R.string.validation_error), Toast.LENGTH_SHORT).show()
-            return
-        }
+        // Default category based on transaction type
+        val category = if (isExpense) "Expense" else "Revenue"
 
         // Parse value
+        val valueText = valueInput.text.toString().replace(",", ".")
         val value = try {
-            valueText.replace(",", ".").toFloat()
+            valueText.toFloat()
         } catch (e: NumberFormatException) {
-            Toast.makeText(this, getString(R.string.validation_error), Toast.LENGTH_SHORT).show()
+            0f
+        }
+
+        // Validate inputs
+        if (name == getString(R.string.name) || value <= 0) {
+            Toast.makeText(this, R.string.validation_error, Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Save transaction data
-        val editor = sharedPreferences.edit()
+        try {
+            // Create transaction record
+            val transaction = JSONObject().apply {
+                put("name", name)
+                put("description", description)
+                put("category", category)
+                put("value", value)
+                put("isExpense", isExpense)
+                put("date", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+            }
 
-        // Update totals based on transaction type
-        if (isExpense) {
-            val totalExpense = sharedPreferences.getFloat("totalExpense", 0f) + value
-            editor.putFloat("totalExpense", totalExpense)
-        } else {
-            val totalRevenue = sharedPreferences.getFloat("totalRevenue", 0f) + value
-            editor.putFloat("totalRevenue", totalRevenue)
+            Log.d(TAG, "New transaction created: $transaction")
+
+            // Get current history as string
+            val historyJson = sharedPreferences.getString("transactionHistory", "[]")
+            Log.d(TAG, "Current history JSON: $historyJson")
+
+            // Convert to JSONArray
+            val historyArray = JSONArray(historyJson)
+            Log.d(TAG, "Current history array length: ${historyArray.length()}")
+
+            // Create a NEW JSONArray for updated history
+            val newHistoryArray = JSONArray()
+
+            // Add new transaction first (at index 0)
+            newHistoryArray.put(transaction)
+            Log.d(TAG, "Added new transaction to new array")
+
+            // Then add all existing transactions
+            for (i in 0 until historyArray.length()) {
+                newHistoryArray.put(historyArray.get(i))
+            }
+
+            Log.d(TAG, "New history array length: ${newHistoryArray.length()}")
+
+            // Save transaction data
+            val editor = sharedPreferences.edit()
+
+            // Update totals based on transaction type
+            if (isExpense) {
+                val totalExpense = sharedPreferences.getFloat("totalExpense", 0f) + value
+                editor.putFloat("totalExpense", totalExpense)
+                Log.d(TAG, "Updated totalExpense to: $totalExpense")
+            } else {
+                val totalRevenue = sharedPreferences.getFloat("totalRevenue", 0f) + value
+                editor.putFloat("totalRevenue", totalRevenue)
+                Log.d(TAG, "Updated totalRevenue to: $totalRevenue")
+            }
+
+            // Save the updated history JSON
+            val newHistoryJson = newHistoryArray.toString()
+            editor.putString("transactionHistory", newHistoryJson)
+
+            // Use commit() for synchronous save
+            val success = editor.commit()
+
+            if (success) {
+                // Verify the changes were saved
+                val verifyJson = sharedPreferences.getString("transactionHistory", "[]")
+                val verifyArray = JSONArray(verifyJson)
+                Log.d(TAG, "Verification - stored history has ${verifyArray.length()} transactions")
+
+                Toast.makeText(this, R.string.transaction_saved, Toast.LENGTH_SHORT).show()
+                finish()
+            } else {
+                Log.e(TAG, "Failed to commit transaction changes!")
+                Toast.makeText(this, "Error saving transaction", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving transaction", e)
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
         }
-
-        // Create transaction record
-        val transaction = JSONObject().apply {
-            put("name", name)
-            put("description", description)
-            put("category", category)
-            put("value", value)
-            put("isExpense", isExpense)
-            put("date", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
-        }
-
-        // Get and update transaction history
-        val historyJson = sharedPreferences.getString("transactionHistory", "[]")
-        val historyArray = JSONArray(historyJson)
-        historyArray.put(0, transaction) // Add to beginning of array (newest first)
-
-        // Save updated history
-        editor.putString("transactionHistory", historyArray.toString())
-        editor.apply()
-
-        Toast.makeText(this, getString(R.string.transaction_saved), Toast.LENGTH_SHORT).show()
-        finish()
     }
 }

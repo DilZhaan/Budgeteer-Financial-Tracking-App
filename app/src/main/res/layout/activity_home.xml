@@ -104,6 +104,7 @@
                                     android:textSize="12sp" />
 
                                 <TextView
+                                    android:id="@+id/revenue_amount"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:fontFamily="sans-serif"
@@ -143,6 +144,7 @@
                                     android:textSize="12sp" />
 
                                 <TextView
+                                    android:id="@+id/expense_amount"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:gravity="center"
@@ -179,6 +181,7 @@
                             android:layout_marginBottom="5dp"
                             android:background="@drawable/card_less_rounded"
                             android:contentDescription="@string/desc_history"
+                            android:onClick="onHistoryClick"
                             android:padding="20dp"
                             android:src="@drawable/icon_history" />
 
@@ -186,6 +189,7 @@
                             android:id="@+id/historico_text"
                             android:layout_width="69dp"
                             android:layout_height="wrap_content"
+                            android:onClick="onHistoryClick"
                             android:text="@string/history"
                             android:textAlignment="center"
                             android:textColor="@color/black"
@@ -199,37 +203,7 @@
                         android:layout_margin="10dp"
                         android:layout_weight="1"
                         android:gravity="center_horizontal"
-                        android:orientation="vertical">
-
-                        <ImageButton
-                            android:id="@+id/categoria"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:layout_marginBottom="5dp"
-                            android:background="@drawable/card_rounded_background"
-                            android:contentDescription="@string/desc_categories"
-                            android:onClick="onCategoryClick"
-                            android:padding="20dp"
-                            android:src="@drawable/icon_categories" />
-
-                        <TextView
-                            android:id="@+id/categoria_text"
-                            android:layout_width="74dp"
-                            android:layout_height="wrap_content"
-                            android:text="@string/categories"
-                            android:textAlignment="center"
-                            android:textColor="@color/black"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="10dp"
-                        android:layout_weight="1"
-                        android:gravity="center_horizontal"
+                        android:onClick="onRegisterClick"
                         android:orientation="vertical">
 
                         <ImageButton
@@ -240,6 +214,7 @@
                             android:layout_marginBottom="5dp"
                             android:background="@drawable/card_rounded_background"
                             android:contentDescription="@string/desc_register"
+                            android:onClick="onRegisterClick"
                             android:padding="20dp"
                             android:src="@drawable/icon_register" />
 
@@ -247,6 +222,7 @@
                             android:id="@+id/registrar_text"
                             android:layout_width="69dp"
                             android:layout_height="wrap_content"
+                            android:onClick="onRegisterClick"
                             android:text="@string/register"
                             android:textAlignment="center"
                             android:textColor="@color/black"
@@ -254,205 +230,6 @@
                             android:textStyle="bold" />
                     </LinearLayout>
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="10dp"
-                        android:layout_weight="1"
-                        android:gravity="center_horizontal"
-                        android:orientation="vertical">
-
-                        <ImageButton
-                            android:id="@+id/dashboard"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:layout_marginBottom="5dp"
-                            android:background="@drawable/card_rounded_background"
-                            android:contentDescription="@string/desc_dashboard"
-                            android:padding="20dp"
-                            android:src="@drawable/icon_dashboard" />
-
-                        <TextView
-                            android:id="@+id/dashboard_text"
-                            android:layout_width="69dp"
-                            android:layout_height="wrap_content"
-                            android:text="@string/dashboard"
-                            android:textAlignment="center"
-                            android:textColor="@color/black"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/despesas_por_categorias"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="5dp"
-                    android:text="@string/expenditure_by_category"
-                    android:textColor="@color/black"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="180dp"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="4dp"
-                    android:background="@drawable/card_rounded_background"
-                    android:gravity="center"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="130dp"
-                        android:layout_height="130dp"
-                        android:contentDescription="@string/desc_leisure_chart"
-                        android:src="@drawable/color_leisure" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="start"
-                        android:orientation="vertical"
-                        android:paddingStart="5dp"
-                        android:paddingEnd="5dp">
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:orientation="horizontal"
-                            android:padding="5dp">
-
-                            <ImageView
-                                android:id="@+id/color_alimentacao"
-                                android:layout_width="15dp"
-                                android:layout_height="19dp"
-                                android:layout_marginEnd="5dp"
-                                android:contentDescription="@string/desc_color_food"
-                                android:src="@drawable/color_food" />
-
-                            <TextView
-                                android:id="@+id/alimentacao_label"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/food"
-                                android:textColor="@color/black"
-                                android:textSize="14sp" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:orientation="horizontal"
-                            android:padding="5dp">
-
-                            <ImageView
-                                android:id="@+id/imageView8"
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_marginEnd="5dp"
-                                android:contentDescription="@string/desc_color_transport"
-                                android:src="@drawable/color_transport" />
-
-                            <TextView
-                                android:id="@+id/transporte"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/transport"
-                                android:textColor="@color/black"
-                                android:textSize="14sp" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:orientation="horizontal"
-                            android:padding="5dp">
-
-                            <ImageView
-                                android:id="@+id/imageView9"
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_marginEnd="5dp"
-                                android:contentDescription="@string/desc_color_residence"
-                                android:src="@drawable/color_residence" />
-
-                            <TextView
-                                android:id="@+id/textView8"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/residence"
-                                android:textColor="@color/black"
-                                android:textSize="14sp" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:orientation="horizontal"
-                            android:padding="5dp">
-
-                            <ImageView
-                                android:id="@+id/imageView10"
-                                android:layout_width="15dp"
-                                android:layout_height="15dp"
-                                android:layout_marginEnd="5dp"
-                                android:contentDescription="@string/desc_color_leisure"
-                                android:src="@drawable/color_leisure" />
-
-                            <TextView
-                                android:id="@+id/textView9"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/leisure"
-                                android:textColor="@color/black"
-                                android:textSize="14sp" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:padding="5dp"
-                            android:text="@string/expense_food"
-                            android:textColor="@color/black"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:padding="5dp"
-                            android:text="@string/expense_transport"
-                            android:textColor="@color/black"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:padding="5dp"
-                            android:text="@string/expense_residence"
-                            android:textColor="@color/black"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:padding="5dp"
-                            android:text="@string/expense_leisure"
-                            android:textColor="@color/black"
-                            android:textSize="14sp" />
-                    </LinearLayout>
                 </LinearLayout>
 
                 <TextView

@@ -102,19 +102,6 @@ android:paddingTop="26dp">
             android:text="@string/description" />
 
         <EditText
-            android:id="@+id/input_categoria"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="27dp"
-            android:background="@drawable/component_input"
-            android:drawableStart="@drawable/icon_category"
-            android:drawableEnd="@drawable/icon_suspended"
-            android:drawablePadding="14dp"
-            android:ems="10"
-            android:inputType="text"
-            android:text="@string/category" />
-
-        <EditText
             android:id="@+id/input_value"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
