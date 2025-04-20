@@ -1,4 +1,18 @@
-<?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-
-</selector>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="25dp"
+    android:height="25dp"
+    android:viewportWidth="30"
+    android:viewportHeight="30">
+    <!-- Coat body: a trapezoid shape -->
+    <path
+        android:pathData="M5,10L25,10L22,27H8L5,10Z"
+        android:fillColor="#434343"/>
+    <!-- High collar with jagged texture -->
+    <path
+        android:pathData="M5,10L8,7L10,9L12,6L15,8L18,5L20,8L22,6L25,10H5Z"
+        android:fillColor="#434343"/>
+    <!-- Buttons on the left side -->
+    <path
+        android:pathData="M7,12A1,1 0 1,1 7,14A1,1 0 1,1 7,12Z M7,16A1,1 0 1,1 7,18A1,1 0 1,1 7,16Z M7,20A1,1 0 1,1 7,22A1,1 0 1,1 7,20Z"
+        android:fillColor="#666666"/>
+</vector>

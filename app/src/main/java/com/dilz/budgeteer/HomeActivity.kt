@@ -1,43 +1,85 @@
 package com.dilz.budgeteer
 
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.LinearLayout
 import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.appcompat.widget.Toolbar
+import com.google.android.material.navigation.NavigationView
 import org.json.JSONArray
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import android.widget.Toast
 
-class HomeActivity : AppCompatActivity() {
+class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var balanceTextView: TextView
     private lateinit var revenueTextView: TextView
     private lateinit var expenseTextView: TextView
+    private lateinit var budgetTextView: TextView
+    private lateinit var budgetProgressTextView: TextView
+    private lateinit var budgetWarningTextView: TextView
+    private lateinit var categoryAnalysisLayout: LinearLayout
+    private lateinit var budgetManager: BudgetManager
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navView: NavigationView
+    private lateinit var toolbar: Toolbar
     private val TAG = "HomeActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
+        // Setup toolbar
+        toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setHomeButtonEnabled(true)
+
+        // Setup navigation drawer
+        drawerLayout = findViewById(R.id.drawer_layout)
+        navView = findViewById(R.id.nav_view)
+        
+        val toggle = ActionBarDrawerToggle(
+            this, drawerLayout, toolbar,
+            R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        )
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+
+        navView.setNavigationItemSelectedListener(this)
+
         // Initialize SharedPreferences
         sharedPreferences = getSharedPreferences("BudgeteerPrefs", MODE_PRIVATE)
+        budgetManager = BudgetManager(sharedPreferences, this)
 
         // Find necessary TextViews
-        balanceTextView = findViewById(R.id.textView4) // Balance amount
-        revenueTextView = findViewById(R.id.revenue_amount) // Using the IDs you added
-        expenseTextView = findViewById(R.id.expense_amount) // Using the IDs you added
+        balanceTextView = findViewById(R.id.textView4)
+        revenueTextView = findViewById(R.id.revenue_amount)
+        expenseTextView = findViewById(R.id.expense_amount)
+        budgetTextView = findViewById(R.id.budget_amount)
+        budgetProgressTextView = findViewById(R.id.budget_progress)
+        budgetWarningTextView = findViewById(R.id.budget_warning)
+        categoryAnalysisLayout = findViewById(R.id.category_analysis_layout)
 
         // Update financial summary
         updateFinancialSummary()
+        updateBudgetInfo()
+        updateCategoryAnalysis()
 
         // Display recent transactions
         displayRecentTransactions()
@@ -47,6 +89,8 @@ class HomeActivity : AppCompatActivity() {
         super.onResume()
         // Refresh data when returning to the activity
         updateFinancialSummary()
+        updateBudgetInfo()
+        updateCategoryAnalysis()
         displayRecentTransactions()
     }
 
@@ -58,24 +102,91 @@ class HomeActivity : AppCompatActivity() {
 
         Log.d(TAG, "Financial summary: Revenue=$totalRevenue, Expense=$totalExpense, Balance=$balance")
 
-        // Always update the balance TextView
+        // Update TextViews
         balanceTextView.text = String.format("R$ %.2f", balance)
+        revenueTextView.text = String.format("R$ %.2f", totalRevenue)
+        expenseTextView.text = String.format("R$ %.2f", totalExpense)
+    }
 
-        // Update revenue TextView if initialized
-        if (::revenueTextView.isInitialized) {
-            revenueTextView.text = String.format("R$ %.2f", totalRevenue)
-            Log.d(TAG, "Updated revenue TextView to: " + String.format("R$ %.2f", totalRevenue))
+    private fun updateBudgetInfo() {
+        val budget = budgetManager.getMonthlyBudget()
+        val progress = budgetManager.getBudgetProgress()
+        val shouldShowWarning = budgetManager.shouldShowBudgetWarning()
+
+        budgetTextView.text = String.format("R$ %.2f", budget)
+        budgetProgressTextView.text = String.format("%.1f%%", progress)
+
+        if (shouldShowWarning) {
+            budgetWarningTextView.visibility = View.VISIBLE
+            budgetWarningTextView.text = "Warning: You've spent ${progress.toInt()}% of your monthly budget!"
         } else {
-            Log.e(TAG, "Revenue TextView not initialized!")
+            budgetWarningTextView.visibility = View.GONE
+        }
+    }
+
+    private fun updateCategoryAnalysis() {
+        categoryAnalysisLayout.removeAllViews()
+
+        // Get total expenses for the current month
+        val totalExpenses = budgetManager.getCurrentMonthExpenses()
+        if (totalExpenses == 0f) {
+            val noDataText = TextView(this)
+            noDataText.text = "No expense data available for this month"
+            noDataText.textSize = 16f
+            noDataText.setTextColor(getColor(R.color.black))
+            categoryAnalysisLayout.addView(noDataText)
+            return
         }
 
-        // Update expense TextView if initialized
-        if (::expenseTextView.isInitialized) {
-            expenseTextView.text = String.format("R$ %.2f", totalExpense)
-            Log.d(TAG, "Updated expense TextView to: " + String.format("R$ %.2f", totalExpense))
-        } else {
-            Log.e(TAG, "Expense TextView not initialized!")
+        // Create a header
+        val header = TextView(this)
+        header.text = "Category-wise Spending"
+        header.textSize = 18f
+        header.setTextColor(getColor(R.color.black))
+        categoryAnalysisLayout.addView(header)
+
+        // Load categories from SharedPreferences
+        val categoriesJson = sharedPreferences.getString("user_categories", "[]")
+        val jsonArray = JSONArray(categoriesJson)
+        val categories = mutableListOf<String>()
+
+        for (i in 0 until jsonArray.length()) {
+            categories.add(jsonArray.getString(i))
         }
+
+        // Add analysis for each category
+        for (category in categories) {
+            val categoryExpense = budgetManager.getCategoryExpenses(category)
+            if (categoryExpense > 0) {
+                val percentage = (categoryExpense / totalExpenses) * 100
+                val categoryRow = createCategoryRow(category, categoryExpense, percentage)
+                categoryAnalysisLayout.addView(categoryRow)
+            }
+        }
+    }
+
+    private fun createCategoryRow(category: String, amount: Float, percentage: Float): LinearLayout {
+        val row = LinearLayout(this)
+        row.orientation = LinearLayout.HORIZONTAL
+        row.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        row.setPadding(0, 8, 0, 8)
+
+        val categoryText = TextView(this)
+        categoryText.text = category
+        categoryText.textSize = 16f
+        categoryText.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+
+        val amountText = TextView(this)
+        amountText.text = String.format("R$ %.2f (%.1f%%)", amount, percentage)
+        amountText.textSize = 16f
+        amountText.gravity = android.view.Gravity.END
+
+        row.addView(categoryText)
+        row.addView(amountText)
+        return row
     }
 
     private fun displayRecentTransactions() {
@@ -307,5 +418,69 @@ class HomeActivity : AppCompatActivity() {
     fun onRegisterClick(view: View) {
         val intent = Intent(this, RegisterActivity::class.java)
         startActivity(intent)
+    }
+
+    fun onCategoryClick(view: View) {
+        val intent = Intent(this, CategoryActivity::class.java)
+        startActivity(intent)
+    }
+
+    fun onBudgetSetupClick(view: View) {
+        val intent = Intent(this, BudgetSetupActivity::class.java)
+        startActivity(intent)
+    }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.nav_home -> {
+                // Already in HomeActivity
+                drawerLayout.closeDrawer(GravityCompat.START)
+            }
+            R.id.nav_transactions -> {
+                startActivity(Intent(this, RegisterActivity::class.java))
+                drawerLayout.closeDrawer(GravityCompat.START)
+            }
+            R.id.nav_budget -> {
+                startActivity(Intent(this, BudgetSetupActivity::class.java))
+                drawerLayout.closeDrawer(GravityCompat.START)
+            }
+            R.id.nav_backup -> {
+                startActivity(Intent(this, BackupRestoreActivity::class.java))
+                drawerLayout.closeDrawer(GravityCompat.START)
+            }
+            R.id.nav_clear_data -> {
+                // Clear app data
+                val sharedPreferences = getSharedPreferences("BudgeteerPrefs", Context.MODE_PRIVATE)
+                sharedPreferences.edit().clear().apply()
+                
+                // Show confirmation message
+                Toast.makeText(this, "App data cleared successfully", Toast.LENGTH_SHORT).show()
+                drawerLayout.closeDrawer(GravityCompat.START)
+            }
+            R.id.nav_signout -> {
+                // Clear user session
+                val userPrefs = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+                userPrefs.edit().clear().apply()
+                
+                // Navigate to LoginActivity and clear the activity stack
+                val intent = Intent(this, LoginActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+            }
+        }
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.closeDrawer(GravityCompat.START)
+            } else {
+                drawerLayout.openDrawer(GravityCompat.START)
+            }
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 }

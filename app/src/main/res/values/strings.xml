@@ -22,7 +22,7 @@
     <string name="leisure">Leisure</string>
     <string name="balance">Balance</string>
     <string name="zero_number">$0.00</string>
-    <string name="logo_descripton">Budgeteer App</string>
+    <string name="logo_descripton">Budgeteer Logo</string>
     <string name="desc_register">Register button</string>
     <string name="dashboard">Dashboard</string>
     <string name="amount_of_expense">$1,200.00</string>
@@ -133,4 +133,7 @@
         libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
+    <string name="desc_return">Return to previous screen</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
 </resources>

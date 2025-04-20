@@ -13,17 +13,6 @@ data class Transaction(
     val isExpense: Boolean,
     val date: Date
 ) {
-    fun toJson(): JSONObject {
-        return JSONObject().apply {
-            put("name", name)
-            put("description", description)
-            put("category", category)
-            put("value", value)
-            put("isExpense", isExpense)
-            put("date", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(date))
-        }
-    }
-
     companion object {
         fun fromJson(json: JSONObject): Transaction {
             return Transaction(
@@ -35,6 +24,17 @@ data class Transaction(
                 date = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                     .parse(json.getString("date")) ?: Date()
             )
+        }
+    }
+
+    fun toJson(): JSONObject {
+        return JSONObject().apply {
+            put("name", name)
+            put("description", description)
+            put("category", category)
+            put("value", value)
+            put("isExpense", isExpense)
+            put("date", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(date))
         }
     }
 }

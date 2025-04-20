@@ -5,8 +5,10 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import java.text.SimpleDateFormat
@@ -22,6 +24,7 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var descriptionInput: EditText
     private lateinit var typeInput: EditText
     private lateinit var valueInput: EditText
+    private lateinit var categorySpinner: Spinner
     private var isExpense = true // Default is expense
     private val TAG = "RegisterActivity"
 
@@ -35,8 +38,9 @@ class RegisterActivity : AppCompatActivity() {
         // Link UI elements
         nameInput = findViewById(R.id.input_name)
         descriptionInput = findViewById(R.id.input_description)
-        typeInput = findViewById(R.id.input_value) // Revenue/expense selection
-        valueInput = findViewById(R.id.spinner_income_outcome) // Amount input
+        typeInput = findViewById(R.id.input_value)
+        valueInput = findViewById(R.id.spinner_income_outcome)
+        categorySpinner = findViewById(R.id.category_spinner)
 
         // Set up return button
         findViewById<ImageButton>(R.id.return_button).setOnClickListener {
@@ -50,6 +54,8 @@ class RegisterActivity : AppCompatActivity() {
 
         // Set default transaction type
         typeInput.setText(getString(R.string.expense))
+        isExpense = true
+        updateCategorySpinner()
 
         // Clear default text when fields are focused
         setupInputClearOnFocus(nameInput, getString(R.string.name))
@@ -75,19 +81,12 @@ class RegisterActivity : AppCompatActivity() {
                 isFormatting = true
 
                 if (s != null && s.isNotEmpty() && !s.toString().equals("0")) {
-                    // Only format if it's not "0" or empty
                     try {
-                        // Remove non-digit characters
                         val digitsOnly = s.toString().replace(Regex("[^\\d]"), "")
-
-                        // Convert to decimal
                         val amount = if (digitsOnly.isEmpty()) 0.0 else digitsOnly.toDouble() / 100
-
-                        // Format as currency
                         valueInput.setText(String.format("%.2f", amount))
                         valueInput.setSelection(valueInput.text.length)
                     } catch (e: Exception) {
-                        // Reset to 0 if there's an error
                         valueInput.setText("0.00")
                         valueInput.setSelection(valueInput.text.length)
                     }
@@ -110,16 +109,42 @@ class RegisterActivity : AppCompatActivity() {
 
     private fun toggleTransactionType() {
         isExpense = !isExpense
-        typeInput.setText(if (isExpense) R.string.expense else R.string.revenue)
+        typeInput.setText(if (isExpense) getString(R.string.expense) else getString(R.string.revenue))
+        typeInput.setCompoundDrawablesWithIntrinsicBounds(
+            getDrawable(R.drawable.icon_money),
+            null,
+            getDrawable(if (isExpense) R.drawable.icon_suspended else R.drawable.icon_revenue),
+            null
+        )
+        updateCategorySpinner()
+    }
+
+    private fun updateCategorySpinner() {
+        // Load categories from SharedPreferences
+        val categoriesJson = sharedPreferences.getString("user_categories", "[]")
+        val jsonArray = JSONArray(categoriesJson)
+        val categories = mutableListOf<String>()
+
+        for (i in 0 until jsonArray.length()) {
+            categories.add(jsonArray.getString(i))
+        }
+
+        // If no categories exist, add a default one
+        if (categories.isEmpty()) {
+            categories.add("Other")
+            sharedPreferences.edit().putString("user_categories", JSONArray().put("Other").toString()).apply()
+        }
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        categorySpinner.adapter = adapter
     }
 
     private fun saveTransaction() {
         // Get input values
         val name = nameInput.text.toString()
         val description = descriptionInput.text.toString()
-
-        // Default category based on transaction type
-        val category = if (isExpense) "Expense" else "Revenue"
+        val category = categorySpinner.selectedItem.toString()
 
         // Parse value
         val valueText = valueInput.text.toString().replace(",", ".")
