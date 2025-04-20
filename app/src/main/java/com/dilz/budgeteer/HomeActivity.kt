@@ -65,9 +65,6 @@ class HomeActivity : AppCompatActivity() {
         updateBudgetInfo()
         updateCategoryAnalysis()
 
-        // Display recent transactions
-        displayRecentTransactions()
-
         // Setup navigation drawer
         setupNavigationDrawer()
     }
@@ -78,7 +75,6 @@ class HomeActivity : AppCompatActivity() {
         updateFinancialSummary()
         updateBudgetInfo()
         updateCategoryAnalysis()
-        displayRecentTransactions()
     }
 
     private fun updateFinancialSummary() {
@@ -174,155 +170,6 @@ class HomeActivity : AppCompatActivity() {
         row.addView(categoryText)
         row.addView(amountText)
         return row
-    }
-
-    private fun displayRecentTransactions() {
-        try {
-            // Get transaction history
-            val historyJson = sharedPreferences.getString("transactionHistory", "[]")
-            val historyArray = JSONArray(historyJson)
-
-            Log.d(TAG, "Displaying recent transactions. Total transactions: ${historyArray.length()}")
-
-            // Find the history card (transaction container) more directly
-            // This method looks for the last LinearLayout in the content area which should be our card
-            val historyCard = findHistoryCard()
-
-            if (historyCard == null) {
-                Log.e(TAG, "Could not find history card")
-                return
-            }
-
-            // Clear the existing content (remove all the hardcoded examples)
-            historyCard.removeAllViews()
-
-            if (historyArray.length() == 0) {
-                // No transactions to display
-                val noTransactionsText = TextView(this)
-                noTransactionsText.text = "No transactions to display"
-                noTransactionsText.textSize = 16f
-                noTransactionsText.setTextColor(getColor(R.color.black))
-                noTransactionsText.gravity = android.view.Gravity.CENTER
-                historyCard.addView(noTransactionsText)
-                return
-            }
-
-            // Convert transaction dates to day of week and group by day
-            val transactionsByDay = mutableMapOf<String, MutableList<org.json.JSONObject>>()
-
-            for (i in 0 until historyArray.length()) {
-                val transaction = historyArray.getJSONObject(i)
-                val dateStr = transaction.getString("date")
-                val date = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).parse(dateStr)
-
-                if (date != null) {
-                    val dayOfWeek = SimpleDateFormat("EEEE", Locale.getDefault()).format(date)
-
-                    if (!transactionsByDay.containsKey(dayOfWeek)) {
-                        transactionsByDay[dayOfWeek] = mutableListOf()
-                    }
-
-                    transactionsByDay[dayOfWeek]?.add(transaction)
-                }
-            }
-
-            // Sort days by how recent they are
-            val sortedDays = transactionsByDay.keys.sortedByDescending { dayName ->
-                val calendarDayValue = when (dayName.lowercase(Locale.getDefault())) {
-                    "sunday" -> Calendar.SUNDAY
-                    "monday" -> Calendar.MONDAY
-                    "tuesday" -> Calendar.TUESDAY
-                    "wednesday" -> Calendar.WEDNESDAY
-                    "thursday" -> Calendar.THURSDAY
-                    "friday" -> Calendar.FRIDAY
-                    "saturday" -> Calendar.SATURDAY
-                    else -> -1
-                }
-
-                // Return the calendar day value for sorting
-                calendarDayValue
-            }
-
-            // Display transactions for up to 2 days
-            var daysDisplayed = 0
-
-            for (day in sortedDays) {
-                if (daysDisplayed >= 2) break
-
-                val transactions = transactionsByDay[day] ?: continue
-
-                // Add day header
-                val dayHeader = TextView(this)
-                dayHeader.text = translateDayOfWeek(day)
-                dayHeader.setTextColor(getColor(R.color.black))
-                dayHeader.textSize = 16f
-                historyCard.addView(dayHeader)
-
-                // Add transactions for this day (up to 2)
-                var transactionsDisplayed = 0
-                for (transaction in transactions) {
-                    if (transactionsDisplayed >= 2) break
-
-                    // Create a row for this transaction
-                    val row = createTransactionRow(transaction)
-                    historyCard.addView(row)
-
-                    transactionsDisplayed++
-                }
-
-                daysDisplayed++
-            }
-
-            Log.d(TAG, "Successfully displayed recent transactions on home page")
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Error displaying recent transactions: ${e.message}", e)
-        }
-    }
-
-    // A more reliable way to find the history card
-    private fun findHistoryCard(): LinearLayout? {
-        // Find the history header first (we know its ID)
-        val historyHeader = findViewById<TextView>(R.id.historico_h2)
-        if (historyHeader == null) {
-            Log.e(TAG, "Could not find history header")
-            return null
-        }
-
-        // Get the parent view which should be a LinearLayout
-        val parentView = historyHeader.parent as? LinearLayout
-        if (parentView == null) {
-            Log.e(TAG, "History header parent is not a LinearLayout")
-            return null
-        }
-
-        // The history card should be the next view after the header
-        val historyCardIndex = parentView.indexOfChild(historyHeader) + 1
-        if (historyCardIndex >= parentView.childCount) {
-            Log.e(TAG, "No view after history header")
-            return null
-        }
-
-        val historyCard = parentView.getChildAt(historyCardIndex) as? LinearLayout
-        if (historyCard == null) {
-            Log.e(TAG, "View after history header is not a LinearLayout")
-            return null
-        }
-
-        return historyCard
-    }
-
-    private fun translateDayOfWeek(englishDay: String): String {
-        return when (englishDay.lowercase(Locale.getDefault())) {
-            "sunday" -> getString(R.string.sunday)
-            "monday" -> getString(R.string.monday)
-            "tuesday" -> getString(R.string.tuesday)
-            "wednesday" -> getString(R.string.wednesday)
-            "thursday" -> getString(R.string.thursday)
-            "friday" -> getString(R.string.friday)
-            "saturday" -> getString(R.string.saturday)
-            else -> englishDay
-        }
     }
 
     private fun createTransactionRow(transaction: org.json.JSONObject): LinearLayout {
