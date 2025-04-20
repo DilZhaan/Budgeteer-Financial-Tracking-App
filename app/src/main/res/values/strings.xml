@@ -136,4 +136,11 @@
     <string name="desc_return">Return to previous screen</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string-array name="transaction_types">
+        <item>Income</item>
+        <item>Expense</item>
+    </string-array>
+
+    <string name="no_transactions">No transactions yet</string>
 </resources>

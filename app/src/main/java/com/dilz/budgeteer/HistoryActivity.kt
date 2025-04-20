@@ -11,6 +11,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONArray
 import org.json.JSONObject
@@ -131,7 +132,7 @@ class HistoryActivity : AppCompatActivity() {
                 val transaction = historyArray.getJSONObject(i)
                 Log.d(TAG, "Creating view for transaction: $transaction")
 
-                val transactionView = createTransactionView(transaction)
+                val transactionView = createTransactionView(transaction, i)
                 contentLayout.addView(transactionView)
             }
 
@@ -141,7 +142,7 @@ class HistoryActivity : AppCompatActivity() {
         }
     }
 
-    private fun createTransactionView(transaction: JSONObject): View {
+    private fun createTransactionView(transaction: JSONObject, position: Int): View {
         val layout = LinearLayout(this)
         layout.orientation = LinearLayout.HORIZONTAL
         layout.layoutParams = LinearLayout.LayoutParams(
@@ -207,6 +208,35 @@ class HistoryActivity : AppCompatActivity() {
 
         layout.addView(amountText)
 
+        // Add edit and delete buttons
+        val buttonsLayout = LinearLayout(this)
+        buttonsLayout.orientation = LinearLayout.HORIZONTAL
+        buttonsLayout.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        buttonsLayout.setPadding(10, 0, 0, 0)
+
+        // Edit button
+        val editButton = ImageButton(this)
+        editButton.setImageResource(R.drawable.ic_edit)
+        editButton.background = null
+        editButton.setOnClickListener {
+            showEditDialog(transaction, position)
+        }
+        buttonsLayout.addView(editButton)
+
+        // Delete button
+        val deleteButton = ImageButton(this)
+        deleteButton.setImageResource(R.drawable.ic_delete)
+        deleteButton.background = null
+        deleteButton.setOnClickListener {
+            showDeleteConfirmation(position)
+        }
+        buttonsLayout.addView(deleteButton)
+
+        layout.addView(buttonsLayout)
+
         // Add divider
         val divider = View(this)
         divider.layoutParams = LinearLayout.LayoutParams(
@@ -227,5 +257,151 @@ class HistoryActivity : AppCompatActivity() {
         containerLayout.addView(divider)
 
         return containerLayout
+    }
+
+    private fun showEditDialog(transaction: JSONObject, position: Int) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Edit Transaction")
+
+        // Create layout for the dialog
+        val layout = LinearLayout(this)
+        layout.orientation = LinearLayout.VERTICAL
+        layout.setPadding(40, 20, 40, 20)
+
+        // Name input
+        val nameInput = android.widget.EditText(this)
+        nameInput.hint = "Transaction Name"
+        nameInput.setText(transaction.getString("name"))
+        layout.addView(nameInput)
+
+        // Value input
+        val valueInput = android.widget.EditText(this)
+        valueInput.hint = "Amount"
+        valueInput.inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+        valueInput.setText(transaction.getDouble("value").toString())
+        layout.addView(valueInput)
+
+        // Type selection
+        val typeSpinner = android.widget.Spinner(this)
+        val adapter = android.widget.ArrayAdapter.createFromResource(
+            this,
+            R.array.transaction_types,
+            android.R.layout.simple_spinner_item
+        )
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        typeSpinner.adapter = adapter
+        typeSpinner.setSelection(if (transaction.getBoolean("isExpense")) 1 else 0)
+        layout.addView(typeSpinner)
+
+        builder.setView(layout)
+
+        builder.setPositiveButton("Save") { dialog, which ->
+            try {
+                val newName = nameInput.text.toString()
+                val newValue = valueInput.text.toString().toDouble()
+                val isExpense = typeSpinner.selectedItemPosition == 1
+
+                // Get current totals
+                var totalRevenue = sharedPreferences.getFloat("totalRevenue", 0f)
+                var totalExpense = sharedPreferences.getFloat("totalExpense", 0f)
+
+                // Remove old transaction from totals
+                val oldValue = transaction.getDouble("value").toFloat()
+                if (transaction.getBoolean("isExpense")) {
+                    totalExpense -= oldValue
+                } else {
+                    totalRevenue -= oldValue
+                }
+
+                // Add new transaction to totals
+                if (isExpense) {
+                    totalExpense += newValue.toFloat()
+                } else {
+                    totalRevenue += newValue.toFloat()
+                }
+
+                // Update transaction
+                transaction.put("name", newName)
+                transaction.put("value", newValue)
+                transaction.put("isExpense", isExpense)
+
+                // Update SharedPreferences
+                val historyJson = sharedPreferences.getString("transactionHistory", "[]")
+                val historyArray = JSONArray(historyJson)
+                historyArray.put(position, transaction)
+                
+                // Save all changes
+                sharedPreferences.edit()
+                    .putString("transactionHistory", historyArray.toString())
+                    .putFloat("totalRevenue", totalRevenue)
+                    .putFloat("totalExpense", totalExpense)
+                    .apply()
+
+                // Update financial summary
+                updateFinancialSummary()
+                displayAllTransactions()
+
+                Toast.makeText(this, "Transaction updated", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Error updating transaction: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        builder.setNegativeButton("Cancel", null)
+        builder.show()
+    }
+
+    private fun showDeleteConfirmation(position: Int) {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Transaction")
+            .setMessage("Are you sure you want to delete this transaction?")
+            .setPositiveButton("Delete") { dialog, which ->
+                try {
+                    // Get current history
+                    val historyJson = sharedPreferences.getString("transactionHistory", "[]")
+                    val historyArray = JSONArray(historyJson)
+                    
+                    // Get the transaction to be deleted
+                    val transaction = historyArray.getJSONObject(position)
+                    val value = transaction.getDouble("value").toFloat()
+                    val isExpense = transaction.getBoolean("isExpense")
+
+                    // Get current totals
+                    var totalRevenue = sharedPreferences.getFloat("totalRevenue", 0f)
+                    var totalExpense = sharedPreferences.getFloat("totalExpense", 0f)
+
+                    // Update totals
+                    if (isExpense) {
+                        totalExpense -= value
+                    } else {
+                        totalRevenue -= value
+                    }
+
+                    // Remove the transaction
+                    val newArray = JSONArray()
+                    for (i in 0 until historyArray.length()) {
+                        if (i != position) {
+                            newArray.put(historyArray.get(i))
+                        }
+                    }
+
+                    // Save all changes
+                    sharedPreferences.edit()
+                        .putString("transactionHistory", newArray.toString())
+                        .putFloat("totalRevenue", totalRevenue)
+                        .putFloat("totalExpense", totalExpense)
+                        .apply()
+
+                    // Update financial summary
+                    updateFinancialSummary()
+                    displayAllTransactions()
+
+                    Toast.makeText(this, "Transaction deleted", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Error deleting transaction: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 }
