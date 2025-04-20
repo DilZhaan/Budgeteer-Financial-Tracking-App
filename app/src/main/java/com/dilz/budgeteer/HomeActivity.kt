@@ -5,26 +5,24 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
-import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import android.widget.LinearLayout
 import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.appcompat.widget.Toolbar
 import com.google.android.material.navigation.NavigationView
 import org.json.JSONArray
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import android.widget.Toast
 
-class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+class HomeActivity : AppCompatActivity() {
 
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var balanceTextView: TextView
@@ -44,25 +42,6 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
-        // Setup toolbar
-        toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setHomeButtonEnabled(true)
-
-        // Setup navigation drawer
-        drawerLayout = findViewById(R.id.drawer_layout)
-        navView = findViewById(R.id.nav_view)
-        
-        val toggle = ActionBarDrawerToggle(
-            this, drawerLayout, toolbar,
-            R.string.navigation_drawer_open, R.string.navigation_drawer_close
-        )
-        drawerLayout.addDrawerListener(toggle)
-        toggle.syncState()
-
-        navView.setNavigationItemSelectedListener(this)
-
         // Initialize SharedPreferences
         sharedPreferences = getSharedPreferences("BudgeteerPrefs", MODE_PRIVATE)
         budgetManager = BudgetManager(sharedPreferences, this)
@@ -76,6 +55,11 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         budgetWarningTextView = findViewById(R.id.budget_warning)
         categoryAnalysisLayout = findViewById(R.id.category_analysis_layout)
 
+        // Initialize navigation drawer components
+        drawerLayout = findViewById(R.id.drawer_layout)
+        navView = findViewById(R.id.nav_view)
+        toolbar = findViewById(R.id.toolbar)
+
         // Update financial summary
         updateFinancialSummary()
         updateBudgetInfo()
@@ -83,6 +67,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Display recent transactions
         displayRecentTransactions()
+
+        // Setup navigation drawer
+        setupNavigationDrawer()
     }
 
     override fun onResume() {
@@ -430,57 +417,45 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         startActivity(intent)
     }
 
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.nav_home -> {
-                // Already in HomeActivity
-                drawerLayout.closeDrawer(GravityCompat.START)
-            }
-            R.id.nav_transactions -> {
-                startActivity(Intent(this, RegisterActivity::class.java))
-                drawerLayout.closeDrawer(GravityCompat.START)
-            }
-            R.id.nav_budget -> {
-                startActivity(Intent(this, BudgetSetupActivity::class.java))
-                drawerLayout.closeDrawer(GravityCompat.START)
-            }
-            R.id.nav_backup -> {
-                startActivity(Intent(this, BackupRestoreActivity::class.java))
-                drawerLayout.closeDrawer(GravityCompat.START)
-            }
-            R.id.nav_clear_data -> {
-                // Clear app data
-                val sharedPreferences = getSharedPreferences("BudgeteerPrefs", Context.MODE_PRIVATE)
-                sharedPreferences.edit().clear().apply()
-                
-                // Show confirmation message
-                Toast.makeText(this, "App data cleared successfully", Toast.LENGTH_SHORT).show()
-                drawerLayout.closeDrawer(GravityCompat.START)
-            }
-            R.id.nav_signout -> {
-                // Clear user session
-                val userPrefs = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
-                userPrefs.edit().clear().apply()
-                
-                // Navigate to LoginActivity and clear the activity stack
-                val intent = Intent(this, LoginActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                finish()
-            }
-        }
-        return true
-    }
+    private fun setupNavigationDrawer() {
+        setSupportActionBar(toolbar)
+        val toggle = ActionBarDrawerToggle(
+            this, drawerLayout, toolbar,
+            R.string.navigation_drawer_open,
+            R.string.navigation_drawer_close
+        )
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == android.R.id.home) {
-            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                drawerLayout.closeDrawer(GravityCompat.START)
-            } else {
-                drawerLayout.openDrawer(GravityCompat.START)
+        navView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_home -> {
+                    // Already in HomeActivity
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                    true
+                }
+                R.id.nav_transactions -> {
+                    startActivity(Intent(this, TransactionActivity::class.java))
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                    true
+                }
+                R.id.nav_budget -> {
+                    startActivity(Intent(this, BudgetSetupActivity::class.java))
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                    true
+                }
+                R.id.nav_backup -> {
+                    startActivity(Intent(this, BackupRestoreActivity::class.java))
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                    true
+                }
+                R.id.nav_signout -> {
+                    // Handle sign out
+                    finish()
+                    true
+                }
+                else -> false
             }
-            return true
         }
-        return super.onOptionsItemSelected(item)
     }
 }

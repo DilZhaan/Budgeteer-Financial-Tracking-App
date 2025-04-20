@@ -18,14 +18,10 @@
             android:icon="@drawable/ic_backup"
             android:title="Backup &amp; Restore" />
     </group>
-    <group android:id="@+id/group_settings">
-        <item
-            android:id="@+id/nav_clear_data"
-            android:icon="@drawable/ic_clear"
-            android:title="Clear Data" />
+    <group android:id="@+id/group_signout">
         <item
             android:id="@+id/nav_signout"
             android:icon="@drawable/ic_signout"
             android:title="Sign Out" />
     </group>
-</menu>
+</menu> 

@@ -86,29 +86,6 @@ class BackupRestoreActivity : AppCompatActivity() {
                 apply()
             }
 
-            // Recalculate total revenue and expense
-            var totalRevenue = 0f
-            var totalExpense = 0f
-
-            for (i in 0 until transactionHistory.length()) {
-                val transaction = transactionHistory.getJSONObject(i)
-                val value = transaction.getDouble("value").toFloat()
-                val isExpense = transaction.getBoolean("isExpense")
-
-                if (isExpense) {
-                    totalExpense += value
-                } else {
-                    totalRevenue += value
-                }
-            }
-
-            // Save the recalculated totals
-            with(sharedPreferences.edit()) {
-                putFloat("totalRevenue", totalRevenue)
-                putFloat("totalExpense", totalExpense)
-                apply()
-            }
-
             Toast.makeText(this, "Data restored successfully from ${backupFile.name}", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Error restoring backup: ${e.message}", Toast.LENGTH_SHORT).show()
