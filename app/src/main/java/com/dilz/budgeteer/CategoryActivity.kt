@@ -2,22 +2,24 @@ package com.dilz.budgeteer
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.widget.ArrayAdapter
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
-import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.json.JSONArray
 
 class CategoryActivity : AppCompatActivity() {
     private lateinit var sharedPreferences: SharedPreferences
-    private lateinit var categoryList: ListView
+    private lateinit var categoryList: RecyclerView
     private lateinit var categoryInput: EditText
     private lateinit var addButton: Button
     private lateinit var categories: MutableList<String>
-    private lateinit var adapter: ArrayAdapter<String>
+    private lateinit var adapter: CategoryAdapter
 
     companion object {
         private const val CATEGORIES_KEY = "user_categories"
@@ -40,6 +42,17 @@ class CategoryActivity : AppCompatActivity() {
             finish()
         }
 
+        // Initialize categories list
+        categories = mutableListOf()
+        
+        // Set up RecyclerView
+        adapter = CategoryAdapter(categories) { position ->
+            showDeleteConfirmationDialog(position)
+        }
+        
+        categoryList.layoutManager = LinearLayoutManager(this)
+        categoryList.adapter = adapter
+
         // Load existing categories
         loadCategories()
 
@@ -47,35 +60,36 @@ class CategoryActivity : AppCompatActivity() {
         addButton.setOnClickListener {
             addCategory()
         }
-
-        // Set up delete on long click
-        categoryList.setOnItemLongClickListener { _, _, position, _ ->
-            deleteCategory(position)
-            true
-        }
     }
 
     private fun loadCategories() {
-        // Load categories from SharedPreferences
-        val categoriesJson = sharedPreferences.getString(CATEGORIES_KEY, "[]")
-        val jsonArray = JSONArray(categoriesJson)
-        categories = mutableListOf()
+        try {
+            // Load categories from SharedPreferences
+            val categoriesJson = sharedPreferences.getString(CATEGORIES_KEY, "[]")
+            val jsonArray = JSONArray(categoriesJson)
+            categories.clear()
 
-        for (i in 0 until jsonArray.length()) {
-            categories.add(jsonArray.getString(i))
+            for (i in 0 until jsonArray.length()) {
+                categories.add(jsonArray.getString(i))
+            }
+
+            // Update adapter
+            adapter.notifyDataSetChanged()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error loading categories: ${e.message}", Toast.LENGTH_SHORT).show()
         }
-
-        // Create adapter and set it to the list view
-        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, categories)
-        categoryList.adapter = adapter
     }
 
     private fun saveCategories() {
-        val jsonArray = JSONArray()
-        categories.forEach { category ->
-            jsonArray.put(category)
+        try {
+            val jsonArray = JSONArray()
+            categories.forEach { category ->
+                jsonArray.put(category)
+            }
+            sharedPreferences.edit().putString(CATEGORIES_KEY, jsonArray.toString()).apply()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error saving categories: ${e.message}", Toast.LENGTH_SHORT).show()
         }
-        sharedPreferences.edit().putString(CATEGORIES_KEY, jsonArray.toString()).apply()
     }
 
     private fun addCategory() {
@@ -90,24 +104,61 @@ class CategoryActivity : AppCompatActivity() {
             return
         }
 
-        // Add to the list and update the adapter
-        categories.add(newCategory)
-        adapter.notifyDataSetChanged()
-        categoryInput.text.clear()
+        try {
+            // Add to the list and update the adapter
+            categories.add(newCategory)
+            adapter.notifyItemInserted(categories.size - 1)
+            categoryInput.text.clear()
+            
+            // Hide keyboard
+            hideKeyboard()
 
-        // Save to SharedPreferences
-        saveCategories()
+            // Save to SharedPreferences
+            saveCategories()
 
-        Toast.makeText(this, "Category added successfully", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Category added successfully", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error adding category: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun showDeleteConfirmationDialog(position: Int) {
+        if (position in categories.indices) {
+            val categoryToDelete = categories[position]
+            
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Delete Category")
+                .setMessage("Are you sure you want to delete '$categoryToDelete'?")
+                .setNegativeButton("Cancel") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .setPositiveButton("Delete") { dialog, _ ->
+                    deleteCategory(position)
+                    dialog.dismiss()
+                }
+                .show()
+        }
     }
 
     private fun deleteCategory(position: Int) {
         if (position in categories.indices) {
             val categoryToDelete = categories[position]
-            categories.removeAt(position)
-            adapter.notifyDataSetChanged()
-            saveCategories()
-            Toast.makeText(this, "Category '$categoryToDelete' deleted", Toast.LENGTH_SHORT).show()
+            
+            try {
+                categories.removeAt(position)
+                adapter.notifyItemRemoved(position)
+                saveCategories()
+                Toast.makeText(this, "Category '$categoryToDelete' deleted", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Error deleting category: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    private fun hideKeyboard() {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        currentFocus?.let {
+            imm.hideSoftInputFromWindow(it.windowToken, 0)
         }
     }
 } 

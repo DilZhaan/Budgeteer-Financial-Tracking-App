@@ -9,15 +9,25 @@ class BudgetManager(private val sharedPreferences: SharedPreferences, private va
     companion object {
         private const val BUDGET_KEY = "monthly_budget"
         private const val LAST_NOTIFICATION_KEY = "last_notification_threshold"
-        private val THRESHOLDS = listOf(75, 90, 100)
+        private const val WARNING_THRESHOLD = 80 // Show warning at 80% of budget
+        private const val CRITICAL_THRESHOLD = 100 // Show critical notification at 100%
     }
 
     private val notificationHelper = NotificationHelper(context)
+
+    init {
+        // Initialize the notification channel
+        notificationHelper.createNotificationChannel()
+    }
 
     fun setMonthlyBudget(amount: Float) {
         sharedPreferences.edit().putFloat(BUDGET_KEY, amount).apply()
         // Reset notification thresholds when budget is updated
         sharedPreferences.edit().putInt(LAST_NOTIFICATION_KEY, 0).apply()
+        
+        // Reset notification states in service and start monitoring
+        BudgetMonitorService.resetNotificationStates(context)
+        BudgetMonitorService.startService(context)
     }
 
     fun getMonthlyBudget(): Float {
@@ -89,7 +99,7 @@ class BudgetManager(private val sharedPreferences: SharedPreferences, private va
         val budget = getMonthlyBudget()
         if (budget == 0f) return false
         val expenses = getCurrentMonthExpenses()
-        return expenses >= (budget * 0.8f)
+        return expenses >= (budget * (WARNING_THRESHOLD / 100f))
     }
 
     fun getBudgetProgress(): Float {
@@ -97,23 +107,71 @@ class BudgetManager(private val sharedPreferences: SharedPreferences, private va
         if (budget == 0f) return 0f
         val expenses = getCurrentMonthExpenses()
         val progress = (expenses / budget) * 100
-
-        // Check thresholds and show notifications
-        checkBudgetThresholds(expenses.toDouble(), budget.toDouble())
-
+        
         return progress
     }
-
-    private fun checkBudgetThresholds(currentSpending: Double, budget: Double) {
+    
+    /**
+     * Check budget thresholds and show notifications if necessary
+     * This should be called explicitly when we want to check and possibly show notifications
+     */
+    fun checkBudgetThresholdsWithNotifications() {
+        val budget = getMonthlyBudget()
+        if (budget <= 0f) return
+        
+        val expenses = getCurrentMonthExpenses()
+        checkBudgetThresholds(expenses, budget)
+    }
+    
+    private fun checkBudgetThresholds(currentSpending: Float, budget: Float) {
+        if (budget <= 0) return
+        
         val percentage = (currentSpending / budget) * 100
         val lastNotifiedThreshold = sharedPreferences.getInt(LAST_NOTIFICATION_KEY, 0)
         
-        for (threshold in THRESHOLDS) {
-            if (percentage >= threshold && threshold > lastNotifiedThreshold) {
-                notificationHelper.showBudgetThresholdNotification(threshold, currentSpending, budget)
-                sharedPreferences.edit().putInt(LAST_NOTIFICATION_KEY, threshold).apply()
-                break // Only notify for the highest threshold reached
+        when {
+            // Budget exceeded notification
+            percentage >= CRITICAL_THRESHOLD && lastNotifiedThreshold < CRITICAL_THRESHOLD -> {
+                val overBudgetAmount = currentSpending - budget
+                notificationHelper.showBudgetExceededNotification(percentage, overBudgetAmount)
+                sharedPreferences.edit().putInt(LAST_NOTIFICATION_KEY, CRITICAL_THRESHOLD).apply()
+            }
+            
+            // Budget warning notification
+            percentage >= WARNING_THRESHOLD && lastNotifiedThreshold < WARNING_THRESHOLD -> {
+                val remainingAmount = budget - currentSpending
+                notificationHelper.showBudgetWarningNotification(percentage, remainingAmount)
+                sharedPreferences.edit().putInt(LAST_NOTIFICATION_KEY, WARNING_THRESHOLD).apply()
             }
         }
+    }
+    
+    /**
+     * Check budget status after new transaction is added and start budget monitoring service
+     * @return true if a threshold has been reached, false otherwise
+     */
+    fun checkBudgetStatusAfterTransaction(): Boolean {
+        val budget = getMonthlyBudget()
+        val expenses = getCurrentMonthExpenses()
+        
+        if (budget > 0) {
+            val percentage = (expenses / budget) * 100
+            
+            // Start or refresh the budget monitoring service
+            BudgetMonitorService.resetNotificationStates(context)
+            BudgetMonitorService.startService(context)
+            
+            return percentage >= WARNING_THRESHOLD
+        }
+        return false
+    }
+    
+    /**
+     * Reset notification thresholds for the new month
+     * Call this at the beginning of each month
+     */
+    fun resetMonthlyNotificationThresholds() {
+        sharedPreferences.edit().putInt(LAST_NOTIFICATION_KEY, 0).apply()
+        BudgetMonitorService.resetNotificationStates(context)
     }
 } 

@@ -1,22 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="black">#FF000000</color>
-    <color name="primary">#FFFFFFFF</color>
-    <color name="PrimaryColor">#FFFFFFFF</color>
-    <color name="SecondaryColor">#12A6E0</color>
-    <color name="LonkColor">#1A1F8E</color>
-
-    <color name="main_blue">#3C87ED</color>
-    <color name="light_backgroud">#DDDBDB</color>
-    <color name="light_green">#B0DBB6</color>
-    <color name="light_red">#E7A29E</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="light_gray">#D2D2D2</color>
-
-    <color name="green">#5A9832</color>
-    <color name="gray">#CFCFCF</color>
-    <color name="purple">#800080</color>
-    <color name="wine">#A52A2A</color>
-    <color name="cyan">#00FFFF</color>
-    <color name="yellow">#FFFF00</color>
+    
+    <!-- Modern color scheme -->
+    <color name="primary">#6200EE</color>
+    <color name="primary_variant">#3700B3</color>
+    <color name="secondary">#03DAC6</color>
+    <color name="secondary_variant">#018786</color>
+    <color name="toolbar_blue">#1976D2</color>
+    
+    <!-- Background colors -->
+    <color name="background">#F5F5F5</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="card_background">#FFFFFF</color>
+    
+    <!-- Text colors -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_hint">#9E9E9E</color>
+    
+    <!-- Status colors -->
+    <color name="success">#4CAF50</color>
+    <color name="warning">#FFC107</color>
+    <color name="error">#F44336</color>
+    <color name="info">#2196F3</color>
+    
+    <!-- Legacy colors kept for backward compatibility -->
+    <color name="PrimaryColor">#6200EE</color>
+    <color name="SecondaryColor">#03DAC6</color>
+    <color name="LonkColor">#3700B3</color>
+    <color name="main_blue">#2196F3</color>
+    <color name="light_backgroud">#F5F5F5</color>
+    <color name="light_green">#81C784</color>
+    <color name="light_red">#E57373</color>
+    <color name="light_gray">#EEEEEE</color>
+    <color name="green">#4CAF50</color>
+    <color name="gray">#9E9E9E</color>
+    <color name="purple">#9C27B0</color>
+    <color name="wine">#C2185B</color>
+    <color name="cyan">#00BCD4</color>
+    <color name="yellow">#FFEB3B</color>
+    
+    <!-- Category colors -->
+    <color name="food_color">#F44336</color>          <!-- Red -->
+    <color name="transport_color">#2196F3</color>     <!-- Blue -->
+    <color name="housing_color">#4CAF50</color>       <!-- Green -->
+    <color name="leisure_color">#FF9800</color>       <!-- Orange -->
+    <color name="education_color">#9C27B0</color>     <!-- Purple -->
+    <color name="health_color">#00BCD4</color>        <!-- Cyan -->
+    <color name="clothing_color">#E91E63</color>      <!-- Pink -->
+    <color name="bills_color">#607D8B</color>         <!-- Blue Grey -->
+    <color name="salary_color">#4CAF50</color>        <!-- Green -->
+    <color name="investments_color">#FFC107</color>   <!-- Amber -->
 </resources>

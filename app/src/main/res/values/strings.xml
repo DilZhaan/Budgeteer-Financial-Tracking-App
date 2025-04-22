@@ -142,5 +142,46 @@
         <item>Expense</item>
     </string-array>
 
-    <string name="no_transactions">No transactions yet</string>
+    <string-array name="expense_categories">
+        <item>@string/expense_food</item>
+        <item>@string/expense_transport</item>
+        <item>@string/expense_residence</item>
+        <item>@string/expense_leisure</item>
+        <item>@string/expense_bills</item>
+        <item>@string/expense_entertainment</item>
+        <item>@string/expense_other</item>
+    </string-array>
+
+    <string-array name="revenue_categories">
+        <item>@string/revenue_salary</item>
+        <item>@string/revenue_freelance</item>
+        <item>@string/revenue_gifts</item>
+        <item>@string/revenue_investments</item>
+        <item>@string/revenue_other</item>
+    </string-array>
+
+    <string name="no_transactions">You don\'t have any transactions yet</string>
+    <string name="expense_bills">Bills and utilities</string>
+    <string name="expense_entertainment">Entertainment expenses</string>
+    <string name="expense_other">Other expenses</string>
+    <string name="revenue_salary">Salary income</string>
+    <string name="revenue_freelance">Freelance income</string>
+    <string name="revenue_gifts">Gifts received</string>
+    <string name="revenue_investments">Investment returns</string>
+    <string name="revenue_other">Other income</string>
+
+    <!-- Backup and Restore -->
+    <string name="backup_restore">Backup &amp; Restore</string>
+    <string name="backup_data">Backup Your Data</string>
+    <string name="restore_data">Restore Data</string>
+    <string name="export_data">Export Data</string>
+    <string name="browse_backups">Browse Backup Files</string>
+    <string name="export_description">Save all your transactions and budget data to a file that you can use to restore your data later.</string>
+    <string name="import_description">Restore your transactions and budget data from a previously created backup file.</string>
+    <string name="no_backups_found">No backup files found</string>
+    <string name="backup_created">Backup created successfully</string>
+    <string name="backup_error">Error creating backup</string>
+    <string name="restore_success">Data restored successfully</string>
+    <string name="restore_error">Error restoring data</string>
+    <string name="select_backup_file">Select a backup file</string>
 </resources>

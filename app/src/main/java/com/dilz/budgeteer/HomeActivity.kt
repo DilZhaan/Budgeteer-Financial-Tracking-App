@@ -21,6 +21,8 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import android.widget.ProgressBar
+import android.widget.Toast
 
 class HomeActivity : AppCompatActivity() {
 
@@ -31,6 +33,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var budgetTextView: TextView
     private lateinit var budgetProgressTextView: TextView
     private lateinit var budgetWarningTextView: TextView
+    private lateinit var budgetProgressBar: ProgressBar
     private lateinit var categoryAnalysisLayout: LinearLayout
     private lateinit var budgetManager: BudgetManager
     private lateinit var drawerLayout: DrawerLayout
@@ -53,13 +56,14 @@ class HomeActivity : AppCompatActivity() {
         budgetTextView = findViewById(R.id.budget_amount)
         budgetProgressTextView = findViewById(R.id.budget_progress)
         budgetWarningTextView = findViewById(R.id.budget_warning)
+        budgetProgressBar = findViewById(R.id.budget_progress_bar)
         categoryAnalysisLayout = findViewById(R.id.category_analysis_layout)
 
         // Initialize navigation drawer components
         drawerLayout = findViewById(R.id.drawer_layout)
         navView = findViewById(R.id.nav_view)
         toolbar = findViewById(R.id.toolbar)
-
+        
         // Update financial summary
         updateFinancialSummary()
         updateBudgetInfo()
@@ -75,6 +79,14 @@ class HomeActivity : AppCompatActivity() {
         updateFinancialSummary()
         updateBudgetInfo()
         updateCategoryAnalysis()
+        
+        // Check if we need to reset monthly notification thresholds
+        checkAndResetMonthlyThresholds()
+        
+        // Check if we need to show budget notifications
+        if (budgetManager.getMonthlyBudget() > 0f) {
+            budgetManager.checkBudgetThresholdsWithNotifications()
+        }
     }
 
     private fun updateFinancialSummary() {
@@ -98,6 +110,7 @@ class HomeActivity : AppCompatActivity() {
 
         budgetTextView.text = String.format("R$ %.2f", budget)
         budgetProgressTextView.text = String.format("%.1f%%", progress)
+        budgetProgressBar.progress = progress.toInt()
 
         if (shouldShowWarning) {
             budgetWarningTextView.visibility = View.VISIBLE
@@ -266,6 +279,8 @@ class HomeActivity : AppCompatActivity() {
 
     private fun setupNavigationDrawer() {
         setSupportActionBar(toolbar)
+        
+        // Add the ActionBarDrawerToggle for the hamburger icon
         val toggle = ActionBarDrawerToggle(
             this, drawerLayout, toolbar,
             R.string.navigation_drawer_open,
@@ -273,7 +288,7 @@ class HomeActivity : AppCompatActivity() {
         )
         drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
-
+        
         navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_home -> {
@@ -297,12 +312,68 @@ class HomeActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_signout -> {
-                    // Handle sign out
-                    finish()
+                    // Handle sign out properly
+                    signOut()
                     true
                 }
                 else -> false
             }
+        }
+    }
+    
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START)
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    /**
+     * Properly handles user sign out by clearing the session and navigating to login screen
+     */
+    private fun signOut() {
+        // Clear user session in SharedPreferences
+        val sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putBoolean("is_logged_in", false)
+        editor.remove("current_user_email")
+        editor.remove("login_time")
+        editor.apply()
+        
+        // Navigate to login screen
+        val intent = Intent(this, LoginActivity::class.java)
+        // Clear the back stack so user can't go back to HomeActivity without logging in
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        
+        // Finish this activity
+        finish()
+        
+        // Show toast message
+        Toast.makeText(this, "Signed out successfully", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun checkAndResetMonthlyThresholds() {
+        // Get the current month and year
+        val calendar = Calendar.getInstance()
+        val currentMonth = calendar.get(Calendar.MONTH)
+        val currentYear = calendar.get(Calendar.YEAR)
+        
+        // Get the last recorded month and year
+        val lastMonth = sharedPreferences.getInt("last_notification_month", -1)
+        val lastYear = sharedPreferences.getInt("last_notification_year", -1)
+        
+        // If it's a new month or year, reset notification thresholds
+        if (currentMonth != lastMonth || currentYear != lastYear) {
+            budgetManager.resetMonthlyNotificationThresholds()
+            
+            // Save current month and year
+            sharedPreferences.edit()
+                .putInt("last_notification_month", currentMonth)
+                .putInt("last_notification_year", currentYear)
+                .apply()
         }
     }
 }

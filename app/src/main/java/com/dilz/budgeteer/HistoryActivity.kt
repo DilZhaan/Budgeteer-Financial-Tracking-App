@@ -1,6 +1,8 @@
 package com.dilz.budgeteer
 
 import android.content.SharedPreferences
+import android.content.res.ColorStateList
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -13,6 +15,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.chip.Chip
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -24,7 +27,9 @@ class HistoryActivity : AppCompatActivity() {
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var currentBalanceValue: TextView
     private lateinit var monthlyBalanceSheetValue: TextView
+    private lateinit var categoryContainer: LinearLayout
     private val TAG = "HistoryActivity"
+    private var currentFilterCategory: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,10 +46,10 @@ class HistoryActivity : AppCompatActivity() {
         // Find balance TextViews
         currentBalanceValue = findViewById(R.id.current_balance_value)
         monthlyBalanceSheetValue = findViewById(R.id.monthly_balance_sheet_value)
+        categoryContainer = findViewById(R.id.categorias)
 
-        // Log current transaction history for debugging
-        val historyJson = sharedPreferences.getString("transactionHistory", "[]")
-        Log.d(TAG, "Transaction history in SharedPreferences: $historyJson")
+        // Create category filter chips
+        createCategoryChips()
 
         // Update financial summary
         updateFinancialSummary()
@@ -58,6 +63,7 @@ class HistoryActivity : AppCompatActivity() {
         // Refresh data when returning to this activity
         updateFinancialSummary()
         displayAllTransactions()
+        createCategoryChips() // Refresh category chips
     }
 
     private fun updateFinancialSummary() {
@@ -73,6 +79,132 @@ class HistoryActivity : AppCompatActivity() {
         Log.d(TAG, "Financial summary updated: Revenue=$totalRevenue, Expense=$totalExpense, Balance=$balance")
     }
 
+    private fun createCategoryChips() {
+        try {
+            // Clear existing chips
+            categoryContainer.removeAllViews()
+            
+            // Add "All" chip for showing all transactions
+            val allChip = Chip(this).apply {
+                text = "All"
+                setTextColor(getColor(R.color.text_primary)) // Black text
+                chipBackgroundColor = ColorStateList.valueOf(getColor(R.color.surface))
+                isCheckable = true
+                isChecked = currentFilterCategory == null
+                setOnClickListener {
+                    currentFilterCategory = null
+                    displayAllTransactions()
+                }
+            }
+            val allParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { marginEnd = 8 }
+            allChip.layoutParams = allParams
+            categoryContainer.addView(allChip)
+            
+            // Get user-defined categories
+            val categories = loadCategoriesFromSharedPreferences()
+            
+            // Add a chip for each category
+            for (category in categories) {
+                val chip = Chip(this).apply {
+                    text = category
+                    setTextColor(getColor(R.color.text_primary)) // Black text
+                    chipBackgroundColor = ColorStateList.valueOf(getColor(R.color.surface))
+                    
+                    // Create a circular drawable for the chip icon
+                    val circleDrawable = GradientDrawable().apply {
+                        shape = GradientDrawable.OVAL
+                        setColor(getCategoryColor(category))
+                        setSize(24, 24)
+                    }
+                    
+                    chipIcon = circleDrawable
+                    isChipIconVisible = true
+                    isCheckable = true
+                    isChecked = category == currentFilterCategory
+                    
+                    // Set click listener to filter transactions
+                    setOnClickListener {
+                        currentFilterCategory = category
+                        filterTransactionsByCategory(category)
+                    }
+                }
+                
+                // Set layout parameters with margin
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { marginEnd = 8 }
+                chip.layoutParams = params
+                
+                // Add chip to container
+                categoryContainer.addView(chip)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating category chips: ${e.message}")
+        }
+    }
+
+    private fun getCategoryColor(category: String): Int {
+        // Map categories to colors
+        return when (category) {
+            "Food" -> getColor(R.color.food_color)
+            "Transportation" -> getColor(R.color.transport_color)
+            "Housing" -> getColor(R.color.housing_color)
+            "Leisure" -> getColor(R.color.leisure_color)
+            "Education" -> getColor(R.color.education_color)
+            "Health" -> getColor(R.color.health_color)
+            "Clothing" -> getColor(R.color.clothing_color)
+            "Bills" -> getColor(R.color.bills_color)
+            "Salary" -> getColor(R.color.salary_color)
+            "Investments" -> getColor(R.color.investments_color)
+            else -> getColor(R.color.primary)
+        }
+    }
+
+    private fun filterTransactionsByCategory(category: String) {
+        try {
+            // Get all transactions
+            val historyJson = sharedPreferences.getString("transactionHistory", "[]")
+            val historyArray = JSONArray(historyJson)
+            
+            // Get container for transactions
+            val container = findViewById<LinearLayout>(R.id.transactions_container)
+            container.removeAllViews()
+            
+            // Find empty state message view
+            val emptyStateMessage = findViewById<TextView>(R.id.empty_state_message)
+            
+            // Filter and display transactions matching the category
+            var hasTransactions = false
+            for (i in 0 until historyArray.length()) {
+                val transaction = historyArray.getJSONObject(i)
+                val transactionCategory = transaction.optString("category", "")
+                
+                if (transactionCategory.equals(category, ignoreCase = true)) {
+                    val view = createTransactionView(transaction, i)
+                    container.addView(view)
+                    hasTransactions = true
+                }
+            }
+            
+            // Show empty state message if no transactions match the filter
+            if (!hasTransactions) {
+                emptyStateMessage.text = "No transactions in category: $category"
+                emptyStateMessage.visibility = View.VISIBLE
+            } else {
+                emptyStateMessage.visibility = View.GONE
+            }
+            
+            // Show feedback toast
+            Toast.makeText(this, "Showing transactions in category: $category", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error filtering transactions: ${e.message}")
+        }
+    }
+
     private fun displayAllTransactions() {
         try {
             // Get transaction history
@@ -81,182 +213,155 @@ class HistoryActivity : AppCompatActivity() {
 
             Log.d(TAG, "Found ${historyArray.length()} transactions")
 
+            // Find the empty state message TextView safely
+            val emptyStateMessage = findViewById<TextView>(R.id.empty_state_message)
+            
             if (historyArray.length() == 0) {
-                // No transactions to display
-                Toast.makeText(this, "No transactions found", Toast.LENGTH_SHORT).show()
+                // Show empty state
+                emptyStateMessage?.visibility = View.VISIBLE
                 return
-            }
-
-            // Find the container for the transaction history
-            val containerLayout = findViewById<LinearLayout>(R.id.categorias_formulario)
-            if (containerLayout == null) {
-                Log.e(TAG, "Could not find history container")
-                return
-            }
-
-            // Find the ScrollView inside the container
-            var scrollView: ScrollView? = null
-            for (i in 0 until containerLayout.childCount) {
-                val child = containerLayout.getChildAt(i)
-                if (child is ScrollView) {
-                    scrollView = child
-                    break
-                }
-            }
-
-            if (scrollView == null) {
-                Log.e(TAG, "Could not find ScrollView")
-                return
-            }
-
-            // Find or create the inner LinearLayout
-            var contentLayout: LinearLayout? = null
-            if (scrollView.childCount > 0 && scrollView.getChildAt(0) is LinearLayout) {
-                contentLayout = scrollView.getChildAt(0) as LinearLayout
             } else {
-                contentLayout = LinearLayout(this)
-                contentLayout.layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-                contentLayout.orientation = LinearLayout.VERTICAL
-                scrollView.removeAllViews()
-                scrollView.addView(contentLayout)
+                emptyStateMessage?.visibility = View.GONE
+            }
+
+            // Get the ScrollView and content container using their IDs
+            val scrollView = findViewById<ScrollView>(R.id.transactions_scrollview)
+            val contentLayout = findViewById<LinearLayout>(R.id.transactions_container)
+            
+            if (scrollView == null || contentLayout == null) {
+                Log.e(TAG, "Could not find ScrollView or content container")
+                Toast.makeText(this, "Error: Layout elements not found", Toast.LENGTH_SHORT).show()
+                return
             }
 
             // Clear existing content
             contentLayout.removeAllViews()
 
-            // Create a simple linear list of all transactions (for testing)
+            // Create a simple linear list of all transactions
             for (i in 0 until historyArray.length()) {
-                val transaction = historyArray.getJSONObject(i)
-                Log.d(TAG, "Creating view for transaction: $transaction")
+                try {
+                    val transaction = historyArray.getJSONObject(i)
+                    Log.d(TAG, "Creating view for transaction: $transaction")
 
-                val transactionView = createTransactionView(transaction, i)
-                contentLayout.addView(transactionView)
+                    val transactionView = createTransactionView(transaction, i)
+                    contentLayout.addView(transactionView)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error displaying transaction at position $i", e)
+                    // Continue with next transaction instead of failing
+                }
             }
 
         } catch (e: Exception) {
             Log.e(TAG, "Error displaying transactions", e)
-            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Error loading transactions: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun createTransactionView(transaction: JSONObject, position: Int): View {
-        val layout = LinearLayout(this)
-        layout.orientation = LinearLayout.HORIZONTAL
-        layout.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
+        try {
+            // Inflate transaction item layout
+            val inflater = layoutInflater
+            val view = inflater.inflate(R.layout.item_transaction, null)
+            
+            // Get transaction data
+            val name = transaction.getString("name")
+            val description = transaction.optString("description", "")
+            val value = transaction.getDouble("value").toFloat()
+            val isExpense = transaction.getBoolean("isExpense")
+            val dateStr = transaction.getString("date")
+            val category = transaction.optString("category", "")
 
-        // Add padding and margins
-        layout.setPadding(0, 20, 0, 20)
+            // Format date and time
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            val date = try {
+                dateFormat.parse(dateStr)
+            } catch (e: Exception) {
+                Date() // Fallback to current date if parse fails
+            }
+            
+            val formattedDate = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(date ?: Date())
 
-        // Get transaction data
-        val name = transaction.getString("name")
-        val value = transaction.getDouble("value").toFloat()
-        val isExpense = transaction.getBoolean("isExpense")
-        val dateStr = transaction.getString("date")
+            // Set transaction details
+            view.findViewById<TextView>(R.id.transaction_name).text = name
+            view.findViewById<TextView>(R.id.transaction_time).text = formattedDate
+            view.findViewById<TextView>(R.id.transaction_value).text = String.format("R$ %.2f", value)
+            
+            // Display category if available
+            if (category.isNotEmpty()) {
+                val categoryText = view.findViewById<TextView>(R.id.transaction_category)
+                categoryText.text = category
+                categoryText.visibility = View.VISIBLE
+                
+                // Set category text color based on transaction type
+                categoryText.setTextColor(getColor(R.color.text_secondary))
+                
+                // Add category background
+                val categoryBackground = view.findViewById<View>(R.id.category_indicator)
+                categoryBackground.visibility = View.VISIBLE
+                
+                // Set category indicator color based on category
+                setCategoryIndicatorColor(categoryBackground, category)
+            } else {
+                view.findViewById<TextView>(R.id.transaction_category).visibility = View.GONE
+                view.findViewById<View>(R.id.category_indicator).visibility = View.GONE
+            }
+            
+            // Set icon and value color based on transaction type
+            val icon = view.findViewById<ImageView>(R.id.transaction_icon)
+            icon.setImageResource(if (isExpense) R.drawable.icon_expense else R.drawable.icon_revenue)
+            icon.setColorFilter(getColor(if (isExpense) R.color.error else R.color.success))
+            
+            val valueText = view.findViewById<TextView>(R.id.transaction_value)
+            valueText.setTextColor(getColor(if (isExpense) R.color.error else R.color.success))
 
-        // Format date and time
-        val date = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).parse(dateStr)
-        val formattedDate = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(date ?: Date())
+            // Set description if available
+            if (description.isNotEmpty()) {
+                val descriptionText = view.findViewById<TextView>(R.id.transaction_description)
+                descriptionText.text = description
+                descriptionText.visibility = View.VISIBLE
+            } else {
+                view.findViewById<TextView>(R.id.transaction_description).visibility = View.GONE
+            }
 
-        // Create icon
-        val icon = ImageView(this)
-        icon.setImageResource(if (isExpense) R.drawable.icon_expense else R.drawable.icon_revenue)
-        icon.layoutParams = LinearLayout.LayoutParams(40, 40)
-        (icon.layoutParams as LinearLayout.LayoutParams).setMargins(0, 0, 20, 0)
-        layout.addView(icon)
+            // Set edit button click listener
+            view.findViewById<ImageButton>(R.id.edit_button).setOnClickListener {
+                showEditDialog(transaction, position)
+            }
 
-        // Create info section (vertical)
-        val infoLayout = LinearLayout(this)
-        infoLayout.orientation = LinearLayout.VERTICAL
-        infoLayout.layoutParams = LinearLayout.LayoutParams(
-            0,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            1.0f // Weight
-        )
+            // Set delete button click listener
+            view.findViewById<ImageButton>(R.id.delete_button).setOnClickListener {
+                showDeleteConfirmation(position)
+            }
 
-        // Transaction name
-        val nameText = TextView(this)
-        nameText.text = name
-        nameText.setTextColor(getColor(R.color.black))
-        nameText.textSize = 16f
-        infoLayout.addView(nameText)
-
-        // Date
-        val dateText = TextView(this)
-        dateText.text = formattedDate
-        dateText.setTextColor(getColor(R.color.black))
-        dateText.textSize = 12f
-        infoLayout.addView(dateText)
-
-        layout.addView(infoLayout)
-
-        // Amount
-        val amountText = TextView(this)
-        amountText.text = String.format("R$ %.2f", value)
-        amountText.setTextColor(getColor(if (isExpense) R.color.wine else R.color.green))
-        amountText.textSize = 16f
-        amountText.gravity = Gravity.END
-        amountText.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-
-        layout.addView(amountText)
-
-        // Add edit and delete buttons
-        val buttonsLayout = LinearLayout(this)
-        buttonsLayout.orientation = LinearLayout.HORIZONTAL
-        buttonsLayout.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        buttonsLayout.setPadding(10, 0, 0, 0)
-
-        // Edit button
-        val editButton = ImageButton(this)
-        editButton.setImageResource(R.drawable.ic_edit)
-        editButton.background = null
-        editButton.setOnClickListener {
-            showEditDialog(transaction, position)
+            return view
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating transaction view", e)
+            // Return empty view in case of error
+            val fallbackView = TextView(this)
+            fallbackView.text = "Error displaying transaction"
+            fallbackView.setPadding(16, 16, 16, 16)
+            return fallbackView
         }
-        buttonsLayout.addView(editButton)
+    }
 
-        // Delete button
-        val deleteButton = ImageButton(this)
-        deleteButton.setImageResource(R.drawable.ic_delete)
-        deleteButton.background = null
-        deleteButton.setOnClickListener {
-            showDeleteConfirmation(position)
-        }
-        buttonsLayout.addView(deleteButton)
-
-        layout.addView(buttonsLayout)
-
-        // Add divider
-        val divider = View(this)
-        divider.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            1 // Height of 1 pixel
+    private fun setCategoryIndicatorColor(view: View, category: String) {
+        // A map of default category colors
+        val defaultColors = mapOf(
+            "Food" to getColor(R.color.food_color),
+            "Transportation" to getColor(R.color.transport_color),
+            "Housing" to getColor(R.color.housing_color),
+            "Leisure" to getColor(R.color.leisure_color),
+            "Education" to getColor(R.color.education_color),
+            "Health" to getColor(R.color.health_color),
+            "Clothing" to getColor(R.color.clothing_color),
+            "Bills" to getColor(R.color.bills_color),
+            "Salary" to getColor(R.color.salary_color),
+            "Investments" to getColor(R.color.investments_color)
         )
-        divider.setBackgroundColor(getColor(R.color.light_gray))
-
-        // Create a container for both the transaction and divider
-        val containerLayout = LinearLayout(this)
-        containerLayout.orientation = LinearLayout.VERTICAL
-        containerLayout.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-
-        containerLayout.addView(layout)
-        containerLayout.addView(divider)
-
-        return containerLayout
+        
+        // Set color based on category, or default to primary color
+        val color = defaultColors[category] ?: getColor(R.color.primary)
+        view.setBackgroundColor(color)
     }
 
     private fun showEditDialog(transaction: JSONObject, position: Int) {
@@ -283,15 +388,40 @@ class HistoryActivity : AppCompatActivity() {
 
         // Type selection
         val typeSpinner = android.widget.Spinner(this)
-        val adapter = android.widget.ArrayAdapter.createFromResource(
+        val typeAdapter = android.widget.ArrayAdapter.createFromResource(
             this,
             R.array.transaction_types,
             android.R.layout.simple_spinner_item
         )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        typeSpinner.adapter = adapter
+        typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        typeSpinner.adapter = typeAdapter
         typeSpinner.setSelection(if (transaction.getBoolean("isExpense")) 1 else 0)
         layout.addView(typeSpinner)
+        
+        // Category selection
+        val categoryLabel = TextView(this)
+        categoryLabel.text = "Category"
+        categoryLabel.setPadding(0, 16, 0, 4)
+        layout.addView(categoryLabel)
+        
+        val categorySpinner = android.widget.Spinner(this)
+        val categories = loadCategoriesFromSharedPreferences()
+        val categoryAdapter = android.widget.ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            categories
+        )
+        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        categorySpinner.adapter = categoryAdapter
+        
+        // Set current category if exists
+        val currentCategory = transaction.optString("category", "")
+        val categoryIndex = categories.indexOf(currentCategory)
+        if (categoryIndex >= 0) {
+            categorySpinner.setSelection(categoryIndex)
+        }
+        
+        layout.addView(categorySpinner)
 
         builder.setView(layout)
 
@@ -300,6 +430,7 @@ class HistoryActivity : AppCompatActivity() {
                 val newName = nameInput.text.toString()
                 val newValue = valueInput.text.toString().toDouble()
                 val isExpense = typeSpinner.selectedItemPosition == 1
+                val newCategory = categorySpinner.selectedItem.toString()
 
                 // Get current totals
                 var totalRevenue = sharedPreferences.getFloat("totalRevenue", 0f)
@@ -324,6 +455,7 @@ class HistoryActivity : AppCompatActivity() {
                 transaction.put("name", newName)
                 transaction.put("value", newValue)
                 transaction.put("isExpense", isExpense)
+                transaction.put("category", newCategory)
 
                 // Update SharedPreferences
                 val historyJson = sharedPreferences.getString("transactionHistory", "[]")
@@ -403,5 +535,41 @@ class HistoryActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun loadCategoriesFromSharedPreferences(): List<String> {
+        try {
+            // Load categories from SharedPreferences
+            val categoriesJson = sharedPreferences.getString("user_categories", "[]")
+            val jsonArray = JSONArray(categoriesJson)
+            val categories = mutableListOf<String>()
+
+            for (i in 0 until jsonArray.length()) {
+                categories.add(jsonArray.getString(i))
+            }
+            
+            // If no custom categories exist, use default ones
+            if (categories.isEmpty()) {
+                // Get default categories and resolve string resources
+                val expenseCategories = resources.getStringArray(R.array.expense_categories)
+                val revenueCategories = resources.getStringArray(R.array.revenue_categories)
+                
+                // Add all categories to the list
+                categories.addAll(expenseCategories)
+                categories.addAll(revenueCategories)
+            }
+            
+            return categories
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading categories: ${e.message}")
+            // Return default categories as fallback - use string resources when possible
+            return listOf(
+                getString(R.string.expense_food),
+                getString(R.string.expense_transport),
+                getString(R.string.expense_residence),
+                getString(R.string.expense_leisure),
+                getString(R.string.expense_other)
+            )
+        }
     }
 }
