@@ -1,5 +1,6 @@
 package com.dilz.budgeteer
 
+import android.app.DatePickerDialog
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.Editable
@@ -13,12 +14,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.NumberFormat
+import java.util.Calendar
 import java.util.UUID
 
 class RegisterActivity : AppCompatActivity() {
@@ -29,9 +32,15 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var typeInput: TextInputEditText
     private lateinit var valueInput: EditText
     private lateinit var categoryDropdown: MaterialAutoCompleteTextView
+    private lateinit var dateInput: TextInputEditText
+    private lateinit var dateInputLayout: TextInputLayout
     private var isExpense = true // Default is expense
     private val TAG = "RegisterActivity"
     private lateinit var budgetManager: BudgetManager
+    
+    // Calendar for date selection
+    private val calendar = Calendar.getInstance()
+    private var selectedDate = Date() // Default to current date
 
     // Added to handle Material Design components
     private lateinit var typeButtonGroup: com.google.android.material.button.MaterialButtonToggleGroup
@@ -53,6 +62,20 @@ class RegisterActivity : AppCompatActivity() {
         categoryDropdown = findViewById(R.id.category_dropdown)
         typeButtonGroup = findViewById(R.id.type_toggle_group)
         transactionDrawable = findViewById(R.id.transaction_icon)
+        dateInput = findViewById(R.id.date_input)
+        dateInputLayout = findViewById(R.id.date_input_layout)
+
+        // Set up date picker with current date
+        updateDateDisplay()
+        
+        // Set up date picker dialog
+        dateInputLayout.setEndIconOnClickListener {
+            showDatePickerDialog()
+        }
+        
+        dateInput.setOnClickListener {
+            showDatePickerDialog()
+        }
 
         // Set up return button
         findViewById<ImageButton>(R.id.return_button).setOnClickListener {
@@ -175,6 +198,36 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Update the date display with the currently selected date
+     */
+    private fun updateDateDisplay() {
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        dateInput.setText(dateFormat.format(selectedDate))
+    }
+    
+    /**
+     * Show date picker dialog to select transaction date
+     */
+    private fun showDatePickerDialog() {
+        val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
+            calendar.set(Calendar.YEAR, year)
+            calendar.set(Calendar.MONTH, month)
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+            selectedDate = calendar.time
+            updateDateDisplay()
+        }
+        
+        // Create DatePickerDialog with current date as default
+        DatePickerDialog(
+            this,
+            dateSetListener,
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
+
     private fun saveTransaction() {
         // Validate inputs
         val name = nameInput.text.toString().trim()
@@ -204,7 +257,7 @@ class RegisterActivity : AppCompatActivity() {
                 category = category,
                 value = value,
                 isExpense = isExpense,
-                date = Date()
+                date = selectedDate // Use the selected date
             )
 
             // Convert to JSON for storage

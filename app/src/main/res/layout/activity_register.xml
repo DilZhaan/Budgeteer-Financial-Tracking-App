@@ -239,7 +239,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="24dp"
+                    android:layout_marginBottom="16dp"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     app:startIconDrawable="@drawable/icon_category"
                     app:startIconTint="@color/primary"
@@ -253,6 +253,30 @@
                         android:inputType="none"
                         android:focusable="false"
                         android:textSize="16sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Date Input -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/date_input_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="24dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:startIconDrawable="@drawable/icon_calendar"
+                    app:startIconTint="@color/primary"
+                    app:endIconDrawable="@drawable/icon_calendar"
+                    app:endIconMode="custom"
+                    app:endIconTint="@color/primary"
+                    android:hint="Date">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/date_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        android:focusable="false"
+                        android:clickable="true"
+                        android:focusableInTouchMode="false" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Save Button -->
